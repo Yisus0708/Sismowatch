@@ -1,18 +1,34 @@
-# Datos locales de contenedores (NO subir a Git)
-infraestructura/minIO/minio_data/
-infraestructura/airflow/logs/*
-!infraestructura/airflow/logs/.gitkeep
-infraestructura/airflow/config/airflow.cfg
+# Secretos y credenciales (NUNCA subir a Git)
+.env
+.env.*
+!.env.example
+web/.env
 
 # Python y entornos virtuales
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.env.local
 venv/
 .venv/
 env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Datos locales y temporales
+/tmp/
+minio_data/
+postgres_data/
+airflow_pgdata/
+spark_ivy_cache/
+*.parquet
+*.crc
+
+# Airflow logs y configuración
+airflow/logs/
+*.cfg
 
 # IDEs y SO
 .vscode/
@@ -24,10 +40,3 @@ Thumbs.db
 .spark-staging/
 metastore_db/
 derby.log
-
-# Claves y secretos locales (NO subir a Git)
-web/.env
-
-infraestructura/gobernanza/openmetadata/.env
-
-infraestructura/gobernanza/.env

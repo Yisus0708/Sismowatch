@@ -1,0 +1,446 @@
+networks:
+  sismowatch_net:
+    name: sismowatch_net
+    driver: bridge
+
+volumes:
+  minio_data:
+  postgres_data:
+  airflow_pgdata:
+  spark_ivy_cache:
+  openmetadata_pgdata:
+  openmetadata_es_data:
+
+services:
+  # -----------------------------------------------------------------------------
+  # 1. MinIO S3 Object Storage (Capa Medallón: Bronze, Silver, Gold)
+  # -----------------------------------------------------------------------------
+  minio:
+    image: quay.io/minio/aistor/minio:RELEASE.2026-09-19T17-05-25Z
+    container_name: sismowatch_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/mnt/data
+    command: server /mnt/data --console-address ":9001"
+    networks:
+      - sismowatch_net
+    restart: unless-stopped
+
+  minio-init-buckets:
+    image: quay.io/minio/aistor/mc:latest
+    container_name: sismowatch_minio_buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Esperando inicialización de MinIO S3...'
+      while ! mc alias set local http://minio:9000 minioadmin minioadmin 2>/dev/null; do
+        sleep 2
+      done
+      echo 'MinIO listo. Configurando buckets Medallón...'
+      mc mb --ignore-existing local/bronze
+      mc mb --ignore-existing local/silver
+      mc mb --ignore-existing local/gold
+      mc admin user svcacct add local minioadmin --access-key 'Uvp62vvXRo9GiUjZPiC6' --secret-key 'SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn' || true
+      echo '✓ Buckets bronze, silver, gold y service account creados con éxito.'
+      "
+    networks:
+      - sismowatch_net
+
+  # -----------------------------------------------------------------------------
+  # 2. PostgreSQL Serving Layer (Curated & Quality Schemas)
+  # -----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: sismowatch_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sismos_db}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - sismowatch_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sismos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------------------------
+  # 3. Apache Spark Cluster (Cómputo Masivo Batch)
+  # -----------------------------------------------------------------------------
+  spark-master:
+    image: apache/spark:3.5.0
+    container_name: sismowatch_spark_master
+    hostname: spark-master
+    user: "0:0"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        pip install --no-cache-dir psycopg2-binary requests minio
+        python3 /opt/spark/apps/spark_trigger_server.py &
+        exec /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8085:8080"   # UI Spark Master
+      - "7077:7077"   # Puerto interno cluster Spark
+      - "5050:5050"   # Servidor Trigger HTTP para Airflow
+    volumes:
+      - ./spark/apps:/opt/spark/apps
+      - spark_ivy_cache:/root/.ivy2
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=Uvp62vvXRo9GiUjZPiC6
+      - MINIO_SECRET_KEY=SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=sismos_db
+      - POSTGRES_USER=sismo_transform_user
+      - POSTGRES_PASSWORD=transform_secret_2026
+    networks:
+      - sismowatch_net
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  spark-worker:
+    image: apache/spark:3.5.0
+    container_name: sismowatch_spark_worker
+    hostname: spark-worker
+    user: "0:0"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        pip install --no-cache-dir psycopg2-binary requests minio
+        exec /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    environment:
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+    volumes:
+      - ./spark/apps:/opt/spark/apps
+    networks:
+      - sismowatch_net
+    depends_on:
+      - spark-master
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------------
+  # 4. Apache Airflow (Orquestación Batch)
+  # -----------------------------------------------------------------------------
+  airflow-postgres:
+    image: postgres:16-alpine
+    container_name: sismowatch_airflow_db
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow_secure_pass
+    volumes:
+      - airflow_pgdata:/var/lib/postgresql/data
+    networks:
+      - sismowatch_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.9.1-python3.11
+    container_name: sismowatch_airflow_init
+    user: "0:0"
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_secure_pass@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqBpPo=}
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_USER:-admin}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_PASSWORD:-admin}
+    command:
+      - /bin/bash
+      - -c
+      - |
+        airflow db migrate
+        airflow users create --username admin --firstname Sismo --lastname Watch --role Admin --email admin@sismowatch.internal --password admin || true
+        echo "✓ Airflow DB inicializado."
+    networks:
+      - sismowatch_net
+
+  airflow-webserver:
+    image: apache/airflow:2.9.1-python3.11
+    container_name: sismowatch_airflow_webserver
+    user: "0:0"
+    depends_on:
+      - airflow-init
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/include:/opt/airflow/include
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_secure_pass@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqBpPo=}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: Uvp62vvXRo9GiUjZPiC6
+      MINIO_SECRET_KEY: SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: sismos_db
+      POSTGRES_USER: sismo_transform_user
+      POSTGRES_PASSWORD: transform_secret_2026
+      SPARK_TRIGGER_URL: http://spark-master:5050/trigger
+      GEMINI_API_KEY_1: ${GEMINI_API_KEY_1:-}
+      GEMINI_API_KEY_2: ${GEMINI_API_KEY_2:-}
+      GEMINI_API_KEY_3: ${GEMINI_API_KEY_3:-}
+      GEMINI_API_KEY_4: ${GEMINI_API_KEY_4:-}
+      GEMINI_API_KEY_5: ${GEMINI_API_KEY_5:-}
+    networks:
+      - sismowatch_net
+    restart: unless-stopped
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.1-python3.11
+    container_name: sismowatch_airflow_scheduler
+    user: "0:0"
+    depends_on:
+      - airflow-init
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/include:/opt/airflow/include
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_secure_pass@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqBpPo=}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: Uvp62vvXRo9GiUjZPiC6
+      MINIO_SECRET_KEY: SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: sismos_db
+      POSTGRES_USER: sismo_transform_user
+      POSTGRES_PASSWORD: transform_secret_2026
+      SPARK_TRIGGER_URL: http://spark-master:5050/trigger
+      GEMINI_API_KEY_1: ${GEMINI_API_KEY_1:-}
+      GEMINI_API_KEY_2: ${GEMINI_API_KEY_2:-}
+      GEMINI_API_KEY_3: ${GEMINI_API_KEY_3:-}
+      GEMINI_API_KEY_4: ${GEMINI_API_KEY_4:-}
+      GEMINI_API_KEY_5: ${GEMINI_API_KEY_5:-}
+    networks:
+      - sismowatch_net
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------------
+  # 5. Backend API (FastAPI)
+  # -----------------------------------------------------------------------------
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: sismowatch_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=sismos_db
+      - POSTGRES_USER=sismo_read_user
+      - POSTGRES_PASSWORD=read_secret_2026
+      - AIRFLOW_BASE_URL=http://airflow-webserver:8080
+      - AIRFLOW_USER=admin
+      - AIRFLOW_PASSWORD=admin
+    networks:
+      - sismowatch_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------------
+  # 6. Plataforma Web Frontend (Nginx)
+  # -----------------------------------------------------------------------------
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: sismowatch_web
+    ports:
+      - "3000:80"
+    networks:
+      - sismowatch_net
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------------
+  # 7. Gobernanza y Linaje de Datos: OpenMetadata 2.0.6
+  # -----------------------------------------------------------------------------
+  openmetadata-postgresql:
+    container_name: sismowatch_om_postgres
+    image: docker.getcollate.io/openmetadata/postgresql:2.0.6
+    restart: unless-stopped
+    command: "--work_mem=10MB"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - openmetadata_pgdata:/var/lib/postgresql/data
+    networks:
+      - sismowatch_net
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d openmetadata_db -tAc 'select 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  elasticsearch:
+    container_name: sismowatch_om_elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx768m
+      - xpack.security.enabled=false
+    networks:
+      - sismowatch_net
+    volumes:
+      - openmetadata_es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE 'green|yellow' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+
+  execute-migrate-all:
+    container_name: sismowatch_om_migrate
+    image: docker.getcollate.io/openmetadata/server:2.0.6
+    command: "./bootstrap/openmetadata-ops.sh migrate"
+    environment:
+      OPENMETADATA_CLUSTER_NAME: openmetadata
+      SERVER_PORT: 8585
+      SERVER_ADMIN_PORT: 8586
+      LOG_LEVEL: INFO
+      MIGRATION_LIMIT_PARAM: 1200
+      DB_DRIVER_CLASS: org.postgresql.Driver
+      DB_SCHEME: postgresql
+      DB_PARAMS: allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      DB_USER: openmetadata_user
+      DB_USER_PASSWORD: openmetadata_password
+      DB_HOST: openmetadata-postgresql
+      DB_PORT: 5432
+      OM_DATABASE: openmetadata_db
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_SCHEME: http
+      SEARCH_TYPE: elasticsearch
+      OPENMETADATA_HEAP_OPTS: -Xms512m -Xmx768m
+      PIPELINE_SERVICE_CLIENT_ENABLED: "false"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      openmetadata-postgresql:
+        condition: service_healthy
+    networks:
+      - sismowatch_net
+
+  openmetadata-server:
+    container_name: sismowatch_om_server
+    restart: unless-stopped
+    image: docker.getcollate.io/openmetadata/server:2.0.6
+    environment:
+      OPENMETADATA_CLUSTER_NAME: openmetadata
+      SERVER_PORT: 8585
+      SERVER_ADMIN_PORT: 8586
+      LOG_LEVEL: INFO
+      AUTHORIZER_CLASS_NAME: org.openmetadata.service.security.DefaultAuthorizer
+      AUTHORIZER_REQUEST_FILTER: org.openmetadata.service.security.JwtFilter
+      AUTHORIZER_ADMIN_PRINCIPALS: "[admin]"
+      AUTHORIZER_ALLOWED_REGISTRATION_DOMAIN: '["all"]'
+      AUTHORIZER_INGESTION_PRINCIPALS: "[ingestion-bot]"
+      AUTHORIZER_PRINCIPAL_DOMAIN: "open-metadata.org"
+      AUTHENTICATION_PROVIDER: basic
+      AUTHENTICATION_RESPONSE_TYPE: id_token
+      AUTHENTICATION_PUBLIC_KEYS: "[http://localhost:8585/api/v1/system/config/jwks]"
+      AUTHENTICATION_ENABLE_SELF_SIGNUP: "true"
+      AUTHENTICATION_CLIENT_TYPE: public
+      RSA_PUBLIC_KEY_FILE_PATH: "./conf/public_key.der"
+      RSA_PRIVATE_KEY_FILE_PATH: "./conf/private_key.der"
+      JWT_ISSUER: "open-metadata.org"
+      JWT_KEY_ID: "Gb389a-9f76-gdjs-a92j-0242bk94356"
+      DB_DRIVER_CLASS: org.postgresql.Driver
+      DB_SCHEME: postgresql
+      DB_PARAMS: allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      DB_USER: openmetadata_user
+      DB_USER_PASSWORD: openmetadata_password
+      DB_HOST: openmetadata-postgresql
+      DB_PORT: 5432
+      OM_DATABASE: openmetadata_db
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_SCHEME: http
+      SEARCH_TYPE: elasticsearch
+      PIPELINE_SERVICE_CLIENT_ENABLED: "false"
+      OPENMETADATA_HEAP_OPTS: -Xms512m -Xmx768m
+      MASK_PASSWORDS_API: "false"
+      SERVER_HOST_API_URL: http://openmetadata-server:8585/api
+    ports:
+      - "8585:8585"
+      - "8586:8586"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      openmetadata-postgresql:
+        condition: service_healthy
+      execute-migrate-all:
+        condition: service_completed_successfully
+    networks:
+      - sismowatch_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8586/healthcheck || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+
+  auto-catalog:
+    container_name: sismowatch_om_auto_catalog
+    image: python:3.11-slim
+    restart: "no"
+    depends_on:
+      openmetadata-server:
+        condition: service_healthy
+    volumes:
+      - ./governance/catalogar_servicios.py:/scripts/catalogar_servicios.py:ro
+    environment:
+      OM_SERVER_URL: "http://openmetadata-server:8585/api/v1"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
+      MINIO_HOST: "minio"
+      MINIO_PORT: "9000"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        pip install --no-cache-dir requests
+        echo "OpenMetadata Server esta saludable. Esperando 10 segundos..."
+        sleep 10
+        echo "Iniciando auto-catalogacion de base de datos, MinIO, glosario y linaje..."
+        python /scripts/catalogar_servicios.py
+        echo "✓ Auto-catalogacion de gobernanza finalizada exitosamente."
+    networks:
+      - sismowatch_net

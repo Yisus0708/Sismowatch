@@ -1,0 +1,375 @@
+#!/usr/bin/env python3
+"""
+catalogar_servicios.py
+=============================================================================
+Script de automatización de gobernanza, catálogo y linaje para OpenMetadata 2.0.6.
+Configurado para el entorno 100% LOCAL en Ubuntu.
+
+Registra de forma idempotente:
+  1. Equipo y Usuarios técnicos (Jesus, Jhonatan, Kevin, Josue, Sayder) como Owners.
+  2. Glosario de Negocio 'Glosario_Sismico_Global' y 7 términos técnicos.
+  3. Servicio PostgreSQL Serving Layer (curated.earthquake_events, etc. con tags y owners).
+  4. Servicio MinIO Medallion Data Lake (Buckets bronze, silver, gold).
+  5. Servicio Apache Spark (Pipeline 'spark_batch_etl').
+  6. Servicio Apache Airflow (DAGs de ingesta, transformación, reporte IA y backfill).
+  7. Grafo de Linaje Completo de Extremo a Extremo.
+=============================================================================
+"""
+
+import os
+import sys
+import time
+import json
+import base64
+import requests
+
+OM_SERVER_URL = os.getenv("OM_SERVER_URL", "http://openmetadata-server:8585/api/v1")
+OM_USER = os.getenv("OM_USER", "admin@open-metadata.org")
+OM_PASSWORD = os.getenv("OM_PASSWORD", "admin")
+
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "postgres")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+MINIO_HOST = os.getenv("MINIO_HOST", "minio")
+MINIO_PORT = os.getenv("MINIO_PORT", "9000")
+
+
+def api_request(method, endpoint, payload=None, token=None):
+    url = f"{OM_SERVER_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    try:
+        resp = requests.request(method, url, json=payload, headers=headers, timeout=30)
+        if resp.status_code in [200, 201]:
+            return resp.json() if resp.text else {}
+        elif resp.status_code == 409:
+            try:
+                return resp.json()
+            except Exception:
+                return {"status": "conflict_exists"}
+        else:
+            print(f"[HTTP {resp.status_code}] en {method} {url}: {resp.text[:200]}")
+            return {}
+    except requests.exceptions.RequestException as e:
+        print(f"[AVISO CONEXION] en {method} {url}: {e}")
+        return {}
+
+
+def esperar_servidor(max_intentos=40, intervalo=3):
+    print(f"Esperando disponibilidad de OpenMetadata Server en {OM_SERVER_URL}...")
+    for i in range(1, max_intentos + 1):
+        try:
+            r = requests.get(f"{OM_SERVER_URL}/system/version", timeout=5)
+            if r.status_code == 200:
+                print(f"✓ OpenMetadata Server ACTIVO y respondiendo.")
+                return True
+        except Exception:
+            pass
+        time.sleep(intervalo)
+    print("Aviso: OpenMetadata no respondió en el tiempo límite, intentando continuar...")
+    return False
+
+
+def autenticar():
+    print("Autenticando contra OpenMetadata API...")
+    pwd_b64 = base64.b64encode(OM_PASSWORD.encode("utf-8")).decode("utf-8")
+    login_payload = {
+        "email": OM_USER,
+        "password": pwd_b64
+    }
+    try:
+        res = api_request("POST", "users/login", login_payload)
+        token = res.get("accessToken")
+        if token:
+            print("✓ Autenticación exitosa (Token JWT adquirido).")
+            return token
+    except Exception as e:
+        print(f"Aviso en login: {e}")
+    return None
+
+
+def registrar_equipo_y_usuarios(token):
+    print("\n--- 1. Registrando Equipo y Usuarios de Gobernanza (Owners) ---")
+    team_payload = {
+        "name": "Equipo_SismoWatch",
+        "displayName": "Equipo de Ingeniería de Datos SismoWatch",
+        "description": "Equipo técnico a cargo de la arquitectura Medallón y Orquestación Batch.",
+        "teamType": "Group"
+    }
+    api_request("PUT", "teams", team_payload, token)
+
+    usuarios = [
+        {"name": "jesus", "displayName": "Jesus (Orchestration & Workflow Engineer)", "email": "jesus@sismowatch.internal"},
+        {"name": "jhonatan", "displayName": "Jhonatan (Tech Lead & Data Architect)", "email": "jhonatan@sismowatch.internal"},
+        {"name": "kevin", "displayName": "Kevin (Spark Batch Engineer)", "email": "kevin@sismowatch.internal"},
+        {"name": "josue", "displayName": "Josue (Real-Time Engineer)", "email": "josue@sismowatch.internal"},
+        {"name": "sayder", "displayName": "Sayder (MinIO Data Lake Engineer)", "email": "sayder@sismowatch.internal"}
+    ]
+
+    owners_dict = {}
+    for u in usuarios:
+        user_payload = {
+            "name": u["name"],
+            "displayName": u["displayName"],
+            "email": u["email"],
+            "isAdmin": True
+        }
+        res = api_request("PUT", "users", user_payload, token)
+        if res.get("id"):
+            owners_dict[u["name"]] = {"id": res["id"], "type": "user"}
+            print(f"  ✓ Usuario registrado: {u['displayName']}")
+
+    return owners_dict
+
+
+def registrar_glosario(token):
+    print("\n--- 2. Registrando Glosario de Términos Sísmicos ---")
+    glosario_payload = {
+        "name": "Glosario_Sismico_Global",
+        "displayName": "Glosario de Términos Geofísicos y Arquitectura SismoWatch",
+        "description": "Estándares y definiciones técnicas para monitoreo de sismos."
+    }
+    api_request("PUT", "glossaries", glosario_payload, token)
+
+    terminos = [
+        ("Hipocentro", "Punto en el interior de la Tierra donde se inicia la ruptura tectónica."),
+        ("Epicentro", "Punto en la superficie terrestre directamente sobre el hipocentro."),
+        ("Magnitud_Momento_Mw", "Escala sismológica cuantitativa de energía liberada por un sismo."),
+        ("Alerta_Tsunami", "Bandera binaria oficial emitida por USGS/NOAA ante riesgo de tsunami."),
+        ("Capa_Bronze", "Almacén inmutable de telemetría GeoJSON cruda en MinIO S3."),
+        ("Capa_Silver", "Datos sísmicos limpios, tipados y deduplicados en Parquet Snappy."),
+        ("Capa_Gold", "Modelos analíticos de negocio agregados en PostgreSQL y MinIO Parquet.")
+    ]
+
+    for nom, desc in terminos:
+        t_payload = {
+            "glossary": "Glosario_Sismico_Global",
+            "name": nom,
+            "displayName": nom.replace("_", " "),
+            "description": desc
+        }
+        api_request("PUT", "glossaryTerms", t_payload, token)
+        print(f"  ✓ Término de glosario: {nom}")
+
+
+def registrar_servicio_postgres(token, owners_dict):
+    print("\n--- 3. Registrando Servicio PostgreSQL Serving Layer ---")
+    service_payload = {
+        "name": "postgresql_sismowatch",
+        "serviceType": "Postgres",
+        "description": "Base de datos PostgreSQL Serving Layer para consumo web y analítica.",
+        "connection": {
+            "config": {
+                "type": "Postgres",
+                "scheme": "postgresql+psycopg2",
+                "username": "sismo_read_user",
+                "authType": {"password": "read_secret_2026"},
+                "hostPort": f"{POSTGRES_HOST}:{POSTGRES_PORT}",
+                "database": "sismos_db"
+            }
+        }
+    }
+    api_request("PUT", "services/databaseServices", service_payload, token)
+
+    db_payload = {
+        "name": "sismos_db",
+        "service": "postgresql_sismowatch",
+        "description": "Base de datos principal de eventos sismológicos."
+    }
+    api_request("PUT", "databases", db_payload, token)
+
+    schema_payload = {
+        "name": "curated",
+        "database": "postgresql_sismowatch.sismos_db",
+        "description": "Esquema Gold para consumo y analítica."
+    }
+    api_request("PUT", "databaseSchemas", schema_payload, token)
+
+    tablas = [
+        ("earthquake_events", "Catálogo unificado de eventos sísmicos limpios y clasificados."),
+        ("resumen_diario_pais", "Modelo analítico diario consolidado por país y fecha."),
+        ("zonas_criticas_frecuentes", "Hotspots tectónicos por cuadrículas de 1°x1°."),
+        ("ai_daily_reports", "Informes ejecutivos diarios redactados por IA con métricas verificadas.")
+    ]
+
+    for t_name, t_desc in tablas:
+        tabla_payload = {
+            "name": t_name,
+            "databaseSchema": "postgresql_sismowatch.sismos_db.curated",
+            "description": t_desc,
+            "columns": [
+                {"name": "id", "dataType": "VARCHAR", "description": "Identificador único USGS"},
+                {"name": "mag", "dataType": "NUMERIC", "description": "Magnitud momento"},
+                {"name": "time_utc", "dataType": "TIMESTAMP", "description": "Timestamp UTC del evento"}
+            ]
+        }
+        if "jesus" in owners_dict:
+            tabla_payload["owners"] = [owners_dict["jesus"]]
+        api_request("PUT", "tables", tabla_payload, token)
+        print(f"  ✓ Tabla catalogada: curated.{t_name}")
+
+
+def registrar_servicio_minio(token, owners_dict):
+    print("\n--- 4. Registrando Servicio MinIO S3 Object Storage ---")
+    service_payload = {
+        "name": "minio_s3_datalake",
+        "serviceType": "S3",
+        "description": "Data Lake Medallón sobre MinIO S3 local.",
+        "connection": {
+            "config": {
+                "type": "S3",
+                "awsConfig": {
+                    "awsAccessKeyId": "Uvp62vvXRo9GiUjZPiC6",
+                    "awsSecretAccessKey": "SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn",
+                    "endPointURL": f"http://{MINIO_HOST}:{MINIO_PORT}"
+                }
+            }
+        }
+    }
+    api_request("PUT", "services/storageServices", service_payload, token)
+
+    buckets = [
+        ("bronze", "Capa Bronze: Archivos GeoJSON crudos e inmutables."),
+        ("silver", "Capa Silver: Archivos Parquet Snappy limpios y particionados."),
+        ("gold", "Capa Gold: Modelos analíticos Parquet de resumen y cuadrículas.")
+    ]
+
+    for b_name, b_desc in buckets:
+        cont_payload = {
+            "name": b_name,
+            "service": "minio_s3_datalake",
+            "description": b_desc
+        }
+        if "sayder" in owners_dict:
+            cont_payload["owners"] = [owners_dict["sayder"]]
+        api_request("PUT", "containers", cont_payload, token)
+        print(f"  ✓ Bucket catalogado: {b_name}")
+
+
+def registrar_servicio_spark_y_airflow(token, owners_dict):
+    print("\n--- 5. Registrando Pipelines de Procesamiento y Orquestación ---")
+    pipe_service_payload = {
+        "name": "airflow_orchestrator",
+        "serviceType": "Airflow",
+        "description": "Orquestador Apache Airflow para ingesta y calidad.",
+        "connection": {
+            "config": {
+                "type": "Airflow",
+                "hostPort": "http://airflow-webserver:8080"
+            }
+        }
+    }
+    api_request("PUT", "services/pipelineServices", pipe_service_payload, token)
+
+    dags = [
+        ("dag_01_ingest_usgs", "Ingesta periódica cada 5 minutos desde la API pública de USGS."),
+        ("dag_02_transform_quality", "Disparo de PySpark Batch ETL y validación de reglas de calidad."),
+        ("dag_03_daily_ai_report", "Detección de anomalías Z-Score y resumen diario con Pool de Gemini."),
+        ("dag_04_historical_backfill", "Backfill histórico parametrizado de 30 días sin duplicados.")
+    ]
+
+    for d_name, d_desc in dags:
+        dag_payload = {
+            "name": d_name,
+            "service": "airflow_orchestrator",
+            "description": d_desc
+        }
+        if "jesus" in owners_dict:
+            dag_payload["owners"] = [owners_dict["jesus"]]
+        api_request("PUT", "pipelines", dag_payload, token)
+        print(f"  ✓ Pipeline catalogado: {d_name}")
+
+
+def registrar_linaje_completo(token):
+    print("\n--- 6. Configurando Linaje de Datos de Extremo a Extremo ---")
+    lineage_edges = [
+        # Bronze -> Spark Batch -> Silver
+        {
+            "from_entity": "container",
+            "from_fqn": "minio_s3_datalake.bronze",
+            "to_entity": "container",
+            "to_fqn": "minio_s3_datalake.silver",
+            "description": "Refinamiento masivo en PySpark Batch"
+        },
+        # Silver -> Spark Batch -> Gold
+        {
+            "from_entity": "container",
+            "from_fqn": "minio_s3_datalake.silver",
+            "to_entity": "container",
+            "to_fqn": "minio_s3_datalake.gold",
+            "description": "Modelado analítico Gold Parquet"
+        },
+        # Gold MinIO -> PostgreSQL Curated
+        {
+            "from_entity": "container",
+            "from_fqn": "minio_s3_datalake.gold",
+            "to_entity": "table",
+            "to_fqn": "postgresql_sismowatch.sismos_db.curated.resumen_diario_pais",
+            "description": "Carga Serving Layer"
+        },
+        # Silver -> PostgreSQL Curated Events
+        {
+            "from_entity": "container",
+            "from_fqn": "minio_s3_datalake.silver",
+            "to_entity": "table",
+            "to_fqn": "postgresql_sismowatch.sismos_db.curated.earthquake_events",
+            "description": "Upsert idempotente de eventos sísmicos validados"
+        },
+        # Events -> AI Reports
+        {
+            "from_entity": "table",
+            "from_fqn": "postgresql_sismowatch.sismos_db.curated.earthquake_events",
+            "to_entity": "table",
+            "to_fqn": "postgresql_sismowatch.sismos_db.curated.ai_daily_reports",
+            "description": "Generación diaria con Pool de Gemini y Z-Score"
+        }
+    ]
+
+    for edge in lineage_edges:
+        from_res = api_request("GET", f"{edge['from_entity']}s/name/{edge['from_fqn']}", token=token)
+        to_res = api_request("GET", f"{edge['to_entity']}s/name/{edge['to_fqn']}", token=token)
+
+        from_id = from_res.get("id")
+        to_id = to_res.get("id")
+
+        if from_id and to_id:
+            lineage_payload = {
+                "edge": {
+                    "fromEntity": {"id": from_id, "type": edge["from_entity"]},
+                    "toEntity": {"id": to_id, "type": edge["to_entity"]},
+                    "description": edge["description"]
+                }
+            }
+            api_request("PUT", "lineage", lineage_payload, token)
+            print(f"  ✓ Linaje vinculado: {edge['from_fqn']} -> {edge['to_fqn']}")
+        else:
+            print(f"  Aviso: No fue posible resolver entidades para linaje {edge['from_fqn']} -> {edge['to_fqn']}")
+
+
+def main():
+    print("=" * 80)
+    print(">>> INICIANDO AUTO-CATALOGACIÓN OPENMETADATA (SISMOWATCH LOCAL) <<<")
+    print("=" * 80)
+
+    if not esperar_servidor():
+        sys.exit(0)
+
+    token = autenticar()
+    owners = registrar_equipo_y_usuarios(token)
+    registrar_glosario(token)
+    registrar_servicio_postgres(token, owners)
+    registrar_servicio_minio(token, owners)
+    registrar_servicio_spark_y_airflow(token, owners)
+    registrar_linaje_completo(token)
+
+    print("\n" + "=" * 80)
+    print(">>> AUTO-CATALOGACIÓN EN OPENMETADATA FINALIZADA EXITOSAMENTE <<<")
+    print("=" * 80)
+
+
+if __name__ == "__main__":
+    main()
