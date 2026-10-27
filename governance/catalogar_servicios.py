@@ -190,27 +190,76 @@ def registrar_servicio_postgres(token, owners_dict):
     api_request("PUT", "databaseSchemas", schema_payload, token)
 
     tablas = [
-        ("earthquake_events", "Catálogo unificado de eventos sísmicos limpios y clasificados."),
-        ("resumen_diario_pais", "Modelo analítico diario consolidado por país y fecha."),
-        ("zonas_criticas_frecuentes", "Hotspots tectónicos por cuadrículas de 1°x1°."),
-        ("ai_daily_reports", "Informes ejecutivos diarios redactados por IA con métricas verificadas.")
+        {
+            "name": "earthquake_events",
+            "description": "Catálogo unificado de eventos sísmicos limpios y clasificados.",
+            "columns": [
+                {"name": "id", "dataType": "VARCHAR", "dataLength": 50, "description": "Identificador único USGS"},
+                {"name": "mag", "dataType": "NUMERIC", "description": "Magnitud momento"},
+                {"name": "mag_type", "dataType": "VARCHAR", "dataLength": 15, "description": "Tipo de magnitud"},
+                {"name": "place", "dataType": "VARCHAR", "dataLength": 255, "description": "Ubicación geográfica descriptiva"},
+                {"name": "country_region", "dataType": "VARCHAR", "dataLength": 100, "description": "País o región normalizada"},
+                {"name": "time_utc", "dataType": "TIMESTAMP", "description": "Timestamp UTC del evento"},
+                {"name": "longitude", "dataType": "NUMERIC", "description": "Longitud geográfica"},
+                {"name": "latitude", "dataType": "NUMERIC", "description": "Latitud geográfica"},
+                {"name": "depth_km", "dataType": "NUMERIC", "description": "Profundidad focal en km"},
+                {"name": "tsunami", "dataType": "INT", "description": "Bandera de alerta de tsunami (0 o 1)"},
+                {"name": "alert_level", "dataType": "VARCHAR", "dataLength": 20, "description": "Nivel de severidad sísmica"},
+                {"name": "depth_type", "dataType": "VARCHAR", "dataLength": 20, "description": "Clasificación de profundidad"}
+            ]
+        },
+        {
+            "name": "resumen_diario_pais",
+            "description": "Modelo analítico diario consolidado por país y fecha.",
+            "columns": [
+                {"name": "fecha_evento", "dataType": "DATE", "description": "Fecha del resumen"},
+                {"name": "pais_estado", "dataType": "VARCHAR", "dataLength": 100, "description": "País o estado agrupado"},
+                {"name": "total_sismos", "dataType": "INT", "description": "Conteo total de sismos"},
+                {"name": "magnitud_maxima", "dataType": "NUMERIC", "description": "Magnitud máxima del día"},
+                {"name": "magnitud_promedio", "dataType": "NUMERIC", "description": "Magnitud promedio"},
+                {"name": "profundidad_promedio_km", "dataType": "NUMERIC", "description": "Profundidad promedio en km"},
+                {"name": "total_alertas_tsunami", "dataType": "INT", "description": "Total alertas de tsunami"},
+                {"name": "sismos_criticos_m6", "dataType": "INT", "description": "Sismos severos M6+"},
+                {"name": "sismos_peligrosos_m5", "dataType": "INT", "description": "Sismos considerables M5+"}
+            ]
+        },
+        {
+            "name": "zonas_criticas_frecuentes",
+            "description": "Hotspots tectónicos por cuadrículas de 1°x1°.",
+            "columns": [
+                {"name": "cuadricula_lat", "dataType": "NUMERIC", "description": "Latitud inferior de la cuadrícula"},
+                {"name": "cuadricula_lon", "dataType": "NUMERIC", "description": "Longitud inferior de la cuadrícula"},
+                {"name": "zona_referencia", "dataType": "VARCHAR", "dataLength": 255, "description": "Nombre de referencia de la zona"},
+                {"name": "total_sismos_registrados", "dataType": "INT", "description": "Total de sismos registrados en el hotspot"},
+                {"name": "sismos_graves_m5", "dataType": "INT", "description": "Sismos M5+ en la celda"},
+                {"name": "magnitud_maxima", "dataType": "NUMERIC", "description": "Magnitud pico registrada"},
+                {"name": "nivel_alerta", "dataType": "VARCHAR", "dataLength": 20, "description": "Nivel de criticidad tectónica"}
+            ]
+        },
+        {
+            "name": "ai_daily_reports",
+            "description": "Informes ejecutivos diarios redactados por IA con métricas verificadas.",
+            "columns": [
+                {"name": "id", "dataType": "INT", "description": "Identificador incremental del reporte"},
+                {"name": "report_date", "dataType": "DATE", "description": "Fecha del informe geofísico"},
+                {"name": "summary_narrative", "dataType": "TEXT", "description": "Narrativa ejecutiva generada por IA"},
+                {"name": "verified_metrics", "dataType": "JSON", "description": "Métricas numéricas auditadas contra base de datos"},
+                {"name": "model_name", "dataType": "VARCHAR", "dataLength": 100, "description": "Modelo de IA generativa utilizado"}
+            ]
+        }
     ]
 
-    for t_name, t_desc in tablas:
+    for t in tablas:
         tabla_payload = {
-            "name": t_name,
+            "name": t["name"],
             "databaseSchema": "postgresql_sismowatch.sismos_db.curated",
-            "description": t_desc,
-            "columns": [
-                {"name": "id", "dataType": "VARCHAR", "description": "Identificador único USGS"},
-                {"name": "mag", "dataType": "NUMERIC", "description": "Magnitud momento"},
-                {"name": "time_utc", "dataType": "TIMESTAMP", "description": "Timestamp UTC del evento"}
-            ]
+            "description": t["description"],
+            "columns": t["columns"]
         }
         if "jesus" in owners_dict:
             tabla_payload["owners"] = [owners_dict["jesus"]]
         api_request("PUT", "tables", tabla_payload, token)
-        print(f"  ✓ Tabla catalogada: curated.{t_name}")
+        print(f"  ✓ Tabla catalogada: curated.{t['name']}")
 
 
 def registrar_servicio_minio(token, owners_dict):
