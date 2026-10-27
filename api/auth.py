@@ -89,7 +89,8 @@ def sanitize_prompt_text(text: str) -> str:
     """
     if not text:
         return ""
-    # Remover etiquetas y patrones típicos de inyección
-    cleaned = re.sub(r"(ignore\s+all\s+previous\s+instructions|system\s+prompt|dan\s+mode)", "[REDACTED]", text, flags=re.IGNORECASE)
-    cleaned = re.sub(r"[<>{}\[\]\\]", "", cleaned)
+    # Remover etiquetas y caracteres de control primero
+    cleaned = re.sub(r"[<>{}\[\]\\]", "", text)
+    # Redactar patrones típicos de inyección
+    cleaned = re.sub(r"(ignore\s+all\s+previous\s+instructions|system\s+prompt|dan\s+mode)", "[REDACTED]", cleaned, flags=re.IGNORECASE)
     return cleaned.strip()[:300]
