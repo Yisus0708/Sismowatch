@@ -263,47 +263,50 @@ def procesar_mensaje_chat(pregunta: str) -> Dict[str, Any]:
             if not api_key:
                 break
 
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-            payload = {
-                "contents": [{"parts": [{"text": prompt_full}]}],
-                "generationConfig": {
-                    "temperature": 0.3,
-                    "maxOutputTokens": 600
-                }
-            }
-
-            try:
-                t0 = time.time()
-                resp = requests.post(url, json=payload, timeout=12)
-                latency_ms = int((time.time() - t0) * 1000)
-
-                if resp.status_code == 200:
-                    data = resp.json()
-                    answer_text = data["candidates"][0]["content"]["parts"][0]["text"]
-                    tokens = data.get("usageMetadata", {}).get("totalTokenCount", 280)
-                    logger.info(f"Chat IA respondido con Gemini Key #{key_num} (Latencia: {latency_ms}ms)")
-                    return {
-                        "answer": answer_text,
-                        "model": "gemini-1.5-flash",
-                        "key_used": key_num,
-                        "latency_ms": latency_ms,
-                        "tokens": tokens,
-                        "context_stats": {
-                            "bronze": ctx["bronze_raw_count"],
-                            "silver": ctx["silver_curated_count"],
-                            "gold_resumen": ctx["gold_resumen_count"],
-                            "gold_hotspots": ctx["gold_hotspots_count"]
-                        }
+            # Modelos soportados con fallback
+            modelos_disponibles = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-3-flash-preview"]
+            for modelo in modelos_disponibles:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={api_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt_full}]}],
+                    "generationConfig": {
+                        "temperature": 0.3,
+                        "maxOutputTokens": 1200
                     }
-                elif resp.status_code in [429, 503]:
-                    logger.warning(f"Key #{key_num} límite de cuota HTTP {resp.status_code}. Rotando...")
-                    pool.advance_key()
-                else:
-                    logger.warning(f"Error en Gemini API con Key #{key_num}: HTTP {resp.status_code}")
-                    pool.advance_key()
-            except Exception as e:
-                logger.error(f"Fallo al conectar con Gemini: {e}")
-                pool.advance_key()
+                }
+
+                try:
+                    t0 = time.time()
+                    resp = requests.post(url, json=payload, timeout=12)
+                    latency_ms = int((time.time() - t0) * 1000)
+
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        answer_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        tokens = data.get("usageMetadata", {}).get("totalTokenCount", 280)
+                        logger.info(f"Chat IA respondido con Gemini ({modelo}) Key #{key_num} (Latencia: {latency_ms}ms)")
+                        return {
+                            "answer": answer_text,
+                            "model": modelo,
+                            "key_used": key_num,
+                            "latency_ms": latency_ms,
+                            "tokens": tokens,
+                            "context_stats": {
+                                "bronze": ctx["bronze_raw_count"],
+                                "silver": ctx["silver_curated_count"],
+                                "gold_resumen": ctx["gold_resumen_count"],
+                                "gold_hotspots": ctx["gold_hotspots_count"]
+                            }
+                        }
+                    elif resp.status_code in [429, 503]:
+                        logger.warning(f"Key #{key_num} modelo {modelo} ocupado HTTP {resp.status_code}. Probando siguiente modelo...")
+                        continue
+                    else:
+                        logger.warning(f"Error en Gemini API con {modelo} Key #{key_num}: HTTP {resp.status_code}")
+                except Exception as e:
+                    logger.error(f"Fallo al conectar con Gemini ({modelo}): {e}")
+
+            pool.advance_key()
 
     # Fallback contextual asegurado
     answer = generar_respuesta_inteligente_contextual(pregunta, ctx)

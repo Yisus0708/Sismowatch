@@ -208,56 +208,56 @@ def generar_reporte_ia_diario(
             break
 
         logging.info(f"Invocando Google AI Studio con Clave Gemini #{key_idx}...")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-        payload = {
-            "contents": [{"parts": [{"text": prompt_formatted}]}],
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 800
+        modelos_disponibles = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-3-flash-preview"]
+
+        for modelo_sel in modelos_disponibles:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo_sel}:generateContent?key={api_key}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt_formatted}]}],
+                "generationConfig": {
+                    "temperature": 0.2,
+                    "maxOutputTokens": 800
+                }
             }
-        }
 
-        t_start = time.time()
-        try:
-            resp = requests.post(url, json=payload, timeout=25)
-            latency = int((time.time() - t_start) * 1000)
+            t_start = time.time()
+            try:
+                resp = requests.post(url, json=payload, timeout=25)
+                latency = int((time.time() - t_start) * 1000)
 
-            if resp.status_code == 200:
-                data = resp.json()
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                tokens = data.get("usageMetadata", {}).get("totalTokenCount", 350)
-                cost = (tokens / 1000.0) * 0.00035
+                if resp.status_code == 200:
+                    data = resp.json()
+                    text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    tokens = data.get("usageMetadata", {}).get("totalTokenCount", 350)
+                    cost = (tokens / 1000.0) * 0.00035
 
-                # Validación de Cifras
-                if verificar_cifras_redaccion(text, metrics):
-                    logging.info(f"✓ Reporte generado y validado exitosamente con Clave #{key_idx} (Latencia: {latency}ms).")
-                    return DailyReportSchema(
-                        report_date=report_date,
-                        summary_narrative=text,
-                        critical_events=metrics.get("critical_events", []),
-                        active_zones=metrics.get("top_paises", []),
-                        anomaly_analysis=anomaly,
-                        verified_metrics=metrics,
-                        model_name="gemini-1.5-flash",
-                        api_key_index=key_idx,
-                        tokens_used=tokens,
-                        latency_ms=latency,
-                        estimated_cost_usd=round(cost, 6)
-                    )
+                    # Validación de Cifras
+                    if verificar_cifras_redaccion(text, metrics):
+                        logging.info(f"✓ Reporte generado y validado exitosamente con ({modelo_sel}) Clave #{key_idx} (Latencia: {latency}ms).")
+                        return DailyReportSchema(
+                            report_date=report_date,
+                            summary_narrative=text,
+                            critical_events=metrics.get("critical_events", []),
+                            active_zones=metrics.get("top_paises", []),
+                            anomaly_analysis=anomaly,
+                            verified_metrics=metrics,
+                            model_name=modelo_sel,
+                            api_key_index=key_idx,
+                            tokens_used=tokens,
+                            latency_ms=latency,
+                            estimated_cost_usd=round(cost, 6)
+                        )
+                    else:
+                        logging.warning(f"La respuesta de la clave #{key_idx} con {modelo_sel} contenía discrepancias en cifras.")
+                elif resp.status_code in [429, 503]:
+                    logging.warning(f"Clave #{key_idx} modelo {modelo_sel} devovió HTTP {resp.status_code}. Probando siguiente modelo...")
+                    continue
                 else:
-                    logging.warning(f"La respuesta de la clave #{key_idx} contenía discrepancias en cifras. Aplicando fallback controlado.")
-                    break
+                    logging.warning(f"Error en clave #{key_idx} con {modelo_sel}: HTTP {resp.status_code}")
+            except Exception as e:
+                logging.error(f"Fallo de conexión con clave #{key_idx} ({modelo_sel}): {e}")
 
-            elif resp.status_code in [429, 503]:
-                logging.warning(f"Clave #{key_idx} devolvió código HTTP {resp.status_code} (Cuota excedida o servicio ocupado). Conmutando clave...")
-                pool.advance_key()
-            else:
-                logging.warning(f"Error en clave #{key_idx}: HTTP {resp.status_code} - {resp.text[:200]}")
-                pool.advance_key()
-
-        except Exception as e:
-            logging.error(f"Fallo de conexión con clave #{key_idx}: {e}")
-            pool.advance_key()
+        pool.advance_key()
 
     logging.info("Activando mecanismo de contingencia: Generando reporte determinista verificado.")
     return generar_reporte_fallback(report_date, metrics, anomaly)
