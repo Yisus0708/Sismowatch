@@ -209,7 +209,7 @@ def build_pdf():
     meta_data = [
         [Paragraph("<b>Fecha de Emisión:</b>", table_cell), Paragraph(datetime.now().strftime("%d/%m/%Y %H:%M UTC"), table_cell)],
         [Paragraph("<b>Ambiente:</b>", table_cell), Paragraph("100% Local en Ubuntu (Docker Compose v2)", table_cell)],
-        [Paragraph("<b>Equipo de Datos:</b>", table_cell), Paragraph("Jesús (Workflow Lead), Jhonatan (Tech Lead), Kevin (Spark), Josué (Realtime), Sayder (Data Lake)", table_cell)],
+        [Paragraph("<b>Autor / Lead Engineer:</b>", table_cell), Paragraph("Yisus0708 (Lead Data & Software Engineer)", table_cell)],
         [Paragraph("<b>Repositorio Oficial:</b>", table_cell), Paragraph("https://github.com/Yisus0708/Sismowatch", table_cell)],
         [Paragraph("<b>Stack Principal:</b>", table_cell), Paragraph("Airflow 2.9, Spark 3.5, MinIO S3, PostgreSQL 16, OpenMetadata 2.0.6, FastAPI, Gemini 3.5 Flash", table_cell)],
     ]

@@ -6,7 +6,7 @@ Script de automatización de gobernanza, catálogo y linaje para OpenMetadata 2.
 Configurado para el entorno 100% LOCAL en Ubuntu.
 
 Registra de forma idempotente:
-  1. Equipo y Usuarios técnicos (Jesus, Jhonatan, Kevin, Josue, Sayder) como Owners.
+  1. Equipo y Usuario técnico (Yisus0708) como Owner único.
   2. Glosario de Negocio 'Glosario_Sismico_Global' y 7 términos técnicos.
   3. Servicio PostgreSQL Serving Layer (curated.earthquake_events, etc. con tags y owners).
   4. Servicio MinIO Medallion Data Lake (Buckets bronze, silver, gold).
@@ -93,21 +93,29 @@ def autenticar():
 
 
 def registrar_equipo_y_usuarios(token):
-    print("\n--- 1. Registrando Equipo y Usuarios de Gobernanza (Owners) ---")
+    print("\n--- 1. Registrando Equipo y Usuario de Gobernanza (Owner Único: Yisus0708) ---")
     team_payload = {
         "name": "Equipo_SismoWatch",
         "displayName": "Equipo de Ingeniería de Datos SismoWatch",
-        "description": "Equipo técnico a cargo de la arquitectura Medallón y Orquestación Batch.",
+        "description": "Lead Data & Software Engineer a cargo de la arquitectura Medallón y Orquestación Batch.",
         "teamType": "Group"
     }
     api_request("PUT", "teams", team_payload, token)
 
+    # Limpiar usuarios anteriores para dejar exclusivamente a Yisus0708
+    obsoletos = ["jesus", "jhonatan", "kevin", "josue", "sayder"]
+    try:
+        users_resp = api_request("GET", "users?limit=50", token=token)
+        for u in users_resp.get("data", []):
+            if u.get("name") in obsoletos:
+                uid = u.get("id")
+                api_request("DELETE", f"users/{uid}?hardDelete=true&recursive=true", token=token)
+                print(f"  ✓ Usuario previo retirado: {u.get('name')}")
+    except Exception as e:
+        print(f"  Aviso al depurar usuarios previos: {e}")
+
     usuarios = [
-        {"name": "jesus", "displayName": "Jesus (Orchestration & Workflow Engineer)", "email": "jesus@sismowatch.internal"},
-        {"name": "jhonatan", "displayName": "Jhonatan (Tech Lead & Data Architect)", "email": "jhonatan@sismowatch.internal"},
-        {"name": "kevin", "displayName": "Kevin (Spark Batch Engineer)", "email": "kevin@sismowatch.internal"},
-        {"name": "josue", "displayName": "Josue (Real-Time Engineer)", "email": "josue@sismowatch.internal"},
-        {"name": "sayder", "displayName": "Sayder (MinIO Data Lake Engineer)", "email": "sayder@sismowatch.internal"}
+        {"name": "yisus0708", "displayName": "Yisus0708 (Lead Data & Software Engineer)", "email": "yisus0708@sismowatch.internal"}
     ]
 
     owners_dict = {}
@@ -261,8 +269,8 @@ def registrar_servicio_postgres(token, owners_dict):
             "description": t["description"],
             "columns": t["columns"]
         }
-        if "jesus" in owners_dict:
-            tabla_payload["owners"] = [owners_dict["jesus"]]
+        if "yisus0708" in owners_dict:
+            tabla_payload["owners"] = [owners_dict["yisus0708"]]
         api_request("PUT", "tables", tabla_payload, token)
         print(f"  ✓ Tabla catalogada: curated.{t['name']} ({t.get('displayName')})")
 
@@ -299,8 +307,8 @@ def registrar_servicio_minio(token, owners_dict):
             "service": "minio_s3_datalake",
             "description": b_desc
         }
-        if "sayder" in owners_dict:
-            cont_payload["owners"] = [owners_dict["sayder"]]
+        if "yisus0708" in owners_dict:
+            cont_payload["owners"] = [owners_dict["yisus0708"]]
         api_request("PUT", "containers", cont_payload, token)
         print(f"  ✓ Bucket catalogado: {b_name} ({b_disp})")
 
@@ -333,8 +341,8 @@ def registrar_servicio_spark_y_airflow(token, owners_dict):
             "service": "airflow_orchestrator",
             "description": d_desc
         }
-        if "jesus" in owners_dict:
-            dag_payload["owners"] = [owners_dict["jesus"]]
+        if "yisus0708" in owners_dict:
+            dag_payload["owners"] = [owners_dict["yisus0708"]]
         api_request("PUT", "pipelines", dag_payload, token)
         print(f"  ✓ Pipeline catalogado: {d_name}")
 

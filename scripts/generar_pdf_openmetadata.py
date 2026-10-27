@@ -197,7 +197,7 @@ def build_pdf():
         [Paragraph("<b>Entorno:</b>", table_cell_bold), Paragraph("100% Local (Ubuntu Linux • Docker Compose)", table_cell_style)],
         [Paragraph("<b>URL de Acceso:</b>", table_cell_bold), Paragraph("http://localhost:8585", table_cell_style)],
         [Paragraph("<b>Credenciales de Administrador:</b>", table_cell_bold), Paragraph("admin@open-metadata.org / admin", table_cell_style)],
-        [Paragraph("<b>Equipo Responsable:</b>", table_cell_bold), Paragraph("Equipo de Ingeniería de Datos SismoWatch", table_cell_style)],
+        [Paragraph("<b>Autor / Lead Engineer:</b>", table_cell_bold), Paragraph("Yisus0708 (Lead Data & Software Engineer)", table_cell_style)],
         [Paragraph("<b>Versión del Catálogo:</b>", table_cell_bold), Paragraph("Release 2.0.6 (PostgreSQL 16, MinIO S3, PySpark 3.5, Airflow 2.9)", table_cell_style)]
     ]
     t_meta = Table(meta_data, colWidths=[150, 354])
@@ -247,25 +247,25 @@ def build_pdf():
             Paragraph("<b>minio_s3_datalake</b>", table_cell_bold),
             Paragraph("MinIO S3 (minio:9000)<br/>Buckets: bronze, silver, gold", table_cell_style),
             Paragraph("Almacenamiento de objetos inmutables. Bronze (GeoJSON crudo), Silver (Parquet limpio), Gold (Modelos Parquet).", table_cell_style),
-            Paragraph("Sayder<br/>(Data Lake Eng.)", table_cell_style)
+            Paragraph("Yisus0708<br/>(Lead Data Eng.)", table_cell_style)
         ],
         [
             Paragraph("<b>postgresql_sismowatch</b>", table_cell_bold),
             Paragraph("PostgreSQL 16 (postgres:5432)<br/>BD: sismos_db • Esquema: curated", table_cell_style),
             Paragraph("Serving Layer de consumo analítico para Web Dashboard y APIs. Alberga 192 sismos curados, 35 resúmenes y 143 hotspots.", table_cell_style),
-            Paragraph("Jesus<br/>(Workflow Eng.)", table_cell_style)
+            Paragraph("Yisus0708<br/>(Lead Data Eng.)", table_cell_style)
         ],
         [
             Paragraph("<b>airflow_orchestrator</b>", table_cell_bold),
             Paragraph("Apache Airflow 2.9 (webserver:8080)<br/>4 DAGs activos", table_cell_style),
             Paragraph("Orquestador continuo: Ingesta periódica, PySpark ETL, validación de reglas de calidad y generación de reportes IA.", table_cell_style),
-            Paragraph("Jesus<br/>(Workflow Eng.)", table_cell_style)
+            Paragraph("Yisus0708<br/>(Lead Data Eng.)", table_cell_style)
         ],
         [
             Paragraph("<b>spark_batch_etl</b>", table_cell_bold),
             Paragraph("Apache Spark 3.5 (master:7077)<br/>Clúster distribuido", table_cell_style),
             Paragraph("Motor de procesamiento masivo en memoria para deduplicación, cálculo de métricas de calidad y particionamiento.", table_cell_style),
-            Paragraph("Kevin<br/>(Spark Eng.)", table_cell_style)
+            Paragraph("Yisus0708<br/>(Lead Data Eng.)", table_cell_style)
         ]
     ]
 
@@ -394,12 +394,12 @@ def build_pdf():
     pasos = [
         ("Paso 1: Inicio de Sesión", "Ingresa en el navegador a <b>http://localhost:8585</b>. En la pantalla de login introduce el correo <b>admin@open-metadata.org</b> y la contraseña <b>admin</b>. Serás redirigido al panel general."),
         ("Paso 2: Comprobar el Glosario", "En el menú lateral izquierdo, haz clic en el ícono de libro <b>Governance</b> ➔ <b>Glossaries</b>. Selecciona <b>Glosario_Sismico_Global</b>. Verifica que figuren los 7 términos con sus descripciones completas."),
-        ("Paso 3: Explorar Tablas PostgreSQL", "Haz clic en la brújula <b>Explore</b> en la barra lateral ➔ pestaña <b>Databases</b> (o Tables). Selecciona <b>postgresql_sismowatch</b> ➔ <b>sismos_db</b> ➔ esquema <b>curated</b>. Verás las 4 tablas oficiales: <i>earthquake_events</i>, <i>resumen_diario_pais</i>, <i>zonas_criticas_frecuentes</i> y <i>ai_daily_reports</i>. Observa que el Owner asignado es <b>Jesus</b>."),
+        ("Paso 3: Explorar Tablas PostgreSQL", "Haz clic en la brújula <b>Explore</b> en la barra lateral ➔ pestaña <b>Databases</b> (o Tables). Selecciona <b>postgresql_sismowatch</b> ➔ <b>sismos_db</b> ➔ esquema <b>curated</b>. Verás las 4 tablas oficiales: <i>earthquake_events</i>, <i>resumen_diario_pais</i>, <i>zonas_criticas_frecuentes</i> y <i>ai_daily_reports</i>. Observa que el Owner asignado es <b>Yisus0708</b>."),
         ("Paso 4: Inspeccionar Esquema y Columnas", "Haz clic en la tabla <b>earthquake_events</b>. En la pestaña <b>Schema</b> podrás ver todas las columnas tipadas (id VARCHAR, mag NUMERIC, country_region VARCHAR, alert_level VARCHAR, etc.) con sus definiciones."),
         ("Paso 5: Visualizar el Linaje Interactivo", "Dentro de la vista de la tabla <b>earthquake_events</b>, haz clic en la pestaña superior <b>Lineage</b>. Observarás el grafo interactivo: a la izquierda el contenedor <b>minio_s3_datalake.silver</b> conectándose a la tabla, y a la derecha la tabla conectándose hacia <b>ai_daily_reports</b>. Puedes arrastrar los nodos y hacer zoom."),
-        ("Paso 6: Comprobar el Data Lake MinIO", "Vuelve a <b>Explore</b> ➔ pestaña <b>Storage Services</b> (o Containers). Selecciona el servicio <b>minio_s3_datalake</b>. Confirma los tres buckets del Medallón: <b>bronze</b>, <b>silver</b> y <b>gold</b>, con el Owner <b>Sayder</b>."),
+        ("Paso 6: Comprobar el Data Lake MinIO", "Vuelve a <b>Explore</b> ➔ pestaña <b>Storage Services</b> (o Containers). Selecciona el servicio <b>minio_s3_datalake</b>. Confirma los tres buckets del Medallón: <b>bronze</b>, <b>silver</b> y <b>gold</b>, con el Owner <b>Yisus0708</b>."),
         ("Paso 7: Verificar Pipelines de Airflow", "En <b>Explore</b> ➔ pestaña <b>Pipelines</b>, abre el servicio <b>airflow_orchestrator</b>. Verás los 4 DAGs catalogados (<i>dag_01_ingest_usgs</i>, <i>dag_02_transform_quality</i>, <i>dag_03_daily_ai_report</i>, <i>dag_04_historical_backfill</i>)."),
-        ("Paso 8: Revisar Equipo y Miembros", "En la esquina inferior izquierda, haz clic en el ícono de engranaje <b>Settings</b> ➔ <b>Members</b> ➔ <b>Teams</b>. Selecciona el grupo <b>Equipo_SismoWatch</b> y comprueba los 5 usuarios técnicos registrados con sus cargos.")
+        ("Paso 8: Revisar Equipo y Miembros", "En la esquina inferior izquierda, haz clic en el ícono de engranaje <b>Settings</b> ➔ <b>Members</b> ➔ <b>Teams</b>. Selecciona el grupo <b>Equipo_SismoWatch</b> y comprueba el usuario técnico registrado (<b>Yisus0708</b>) con su cargo de Lead Data & Software Engineer.")
     ]
 
     for p_title, p_desc in pasos:

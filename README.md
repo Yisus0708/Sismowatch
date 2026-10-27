@@ -189,3 +189,10 @@ pytest tests/ -v
 1. **Topologías Geoespaciales:** Actualmente el enriquecimiento de país se extrae del campo descriptivo `place`. Con mayor tiempo, se integraría una base de datos PostGIS con polígonos vectoriales Shapefile para asociar fallas tectónicas exactas mediante intersección espacial `ST_Contains`.
 2. **Multi-Model LLM Routing:** Extender el pool de IA no solo entre 5 claves de Gemini, sino permitiendo conmutación híbrida hacia modelos locales con Ollama en caso de desconexión total de internet.
 3. **Escalabilidad Horizontal:** Configurar CeleryExecutor o KubernetesExecutor en Airflow para paralelizar múltiples ejecuciones de backfill histórico simultáneas.
+
+---
+
+## 👤 Autor / Contributor
+
+* **Yisus0708** ([@Yisus0708](https://github.com/Yisus0708)) — Lead Data & Software Engineer
+

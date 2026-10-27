@@ -88,14 +88,14 @@
     <!-- Píldora de Identificación del Expositor Actual -->
     <div id="current-speaker-badge" class="hud-glass px-4 py-1.5 rounded-full flex items-center gap-2 border-cyan-500/40 text-xs font-mono-geo">
       <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-      <span id="speaker-name" class="font-bold text-white">Jhonatan</span>
+      <span id="speaker-name" class="font-bold text-white">Yisus0708</span>
       <span class="text-slate-500">•</span>
-      <span id="speaker-role" class="text-cyan-300">Tech Lead</span>
+      <span id="speaker-role" class="text-cyan-300">Lead Data & Software Engineer</span>
     </div>
 
     <!-- Acciones Rápidas -->
     <div class="flex items-center gap-2">
-      <a href="http://localhost:8000" target="_blank" class="hud-glass px-3 py-1.5 rounded-xl text-xs font-mono-geo text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5" title="Abrir Dashboard Web">
+      <a href="http://localhost:3000" target="_blank" class="hud-glass px-3 py-1.5 rounded-xl text-xs font-mono-geo text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5" title="Abrir Dashboard Web">
         <span class="material-symbols-outlined text-[16px] text-emerald-400">dashboard</span> Demo Web
       </a>
       <button onclick="toggleFullScreen()" class="hud-glass w-9 h-9 rounded-xl flex items-center justify-center text-slate-300 hover:text-white transition" title="Pantalla Completa (Tecla F)">
@@ -107,7 +107,7 @@
     <!-- ================================================================= -->
   <!-- SLIDE 1: PORTADA OFICIAL -->
   <!-- ================================================================= -->
-  <section class="slide active flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide active flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-7 md:p-8 relative overflow-hidden">
       <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-500 via-emerald-400 to-purple-500"></div>
       
@@ -120,35 +120,15 @@
       </h1>
       
       <p class="text-sm sm:text-base text-slate-300 font-body mt-3 max-w-3xl leading-relaxed">
-        Plataforma distribuida implementada bajo una <strong class="text-cyan-300">Arquitectura Lambda</strong> y un <strong class="text-emerald-300">Data Lake Medallion</strong> sobre MinIO, Apache Kafka, Apache Spark, Apache Airflow, PostgreSQL, Apache Atlas, OpenMetadata y TerraPulse GIS.
+        Plataforma distribuida implementada bajo una <strong class="text-cyan-300">Arquitectura Lambda</strong> y un <strong class="text-emerald-300">Data Lake Medallion</strong> sobre MinIO, Apache Kafka, Apache Spark, Apache Airflow, PostgreSQL, Apache Atlas, OpenMetadata y SismoWatch GIS.
       </p>
 
-      <!-- Tabla de Integrantes y Especialidades de Desarrollo -->
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-4 pt-4 border-t border-white/10 font-mono-geo text-xs">
-        <div class="p-3 rounded-2xl bg-black/40 border border-cyan-500/30">
-          <span class="text-slate-400 text-[10px] uppercase block font-bold">Tech Lead & Arq.</span>
-          <span class="text-cyan-300 font-bold block text-sm mt-0.5">Jhonatan</span>
-          <span class="text-[10px] text-slate-300 font-body block mt-1">MinIO, Postgres, Atlas, OpenMetadata, Web GIS</span>
-        </div>
-        <div class="p-3 rounded-2xl bg-black/40 border border-amber-500/30">
-          <span class="text-slate-400 text-[10px] uppercase block font-bold">Streaming Ingestion</span>
-          <span class="text-amber-300 font-bold block text-sm mt-0.5">Sayder</span>
-          <span class="text-[10px] text-slate-300 font-body block mt-1">Apache Kafka KRaft, HTTP Source & S3 Sink</span>
-        </div>
-        <div class="p-3 rounded-2xl bg-black/40 border border-emerald-500/30">
-          <span class="text-slate-400 text-[10px] uppercase block font-bold">Real-Time Compute</span>
-          <span class="text-emerald-300 font-bold block text-sm mt-0.5">Josue</span>
-          <span class="text-[10px] text-slate-300 font-body block mt-1">PySpark Structured Streaming & Upsert</span>
-        </div>
-        <div class="p-3 rounded-2xl bg-black/40 border border-purple-500/30">
-          <span class="text-slate-400 text-[10px] uppercase block font-bold">Orchestration</span>
-          <span class="text-purple-300 font-bold block text-sm mt-0.5">Jesus</span>
-          <span class="text-[10px] text-slate-300 font-body block mt-1">Apache Airflow DAG Diario & Trigger 5050</span>
-        </div>
-        <div class="p-3 rounded-2xl bg-black/40 border border-rose-500/30">
-          <span class="text-slate-400 text-[10px] uppercase block font-bold">Batch Compute</span>
-          <span class="text-rose-300 font-bold block text-sm mt-0.5">Kevin</span>
-          <span class="text-[10px] text-slate-300 font-body block mt-1">PySpark Batch ETL, Parquet & Modelos Gold</span>
+      <!-- Autor y Contributor Único -->
+      <div class="mt-4 pt-4 border-t border-white/10 font-mono-geo text-xs flex justify-center">
+        <div class="p-4 rounded-2xl bg-black/40 border border-cyan-500/30 max-w-xl w-full text-center">
+          <span class="text-slate-400 text-[10px] uppercase block font-bold">Autor & Lead Data Engineer</span>
+          <span class="text-cyan-300 font-bold block text-base mt-1">Yisus0708</span>
+          <span class="text-xs text-slate-300 font-body block mt-1">Arquitectura Medallón, Ingestión Streaming & Batch, Spark ETL, Airflow, OpenMetadata, Serving Layer & SismoWatch GIS</span>
         </div>
       </div>
     </div>
@@ -157,7 +137,7 @@
   <!-- ================================================================= -->
   <!-- SLIDE 2: ARQUITECTURA LAMBDA & MEDALLION -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7">
       <div class="flex items-center justify-between mb-4">
         <span class="text-xs font-mono-geo uppercase tracking-wider text-cyan-400 font-bold">Patron de Diseño</span>
@@ -210,7 +190,7 @@
   <!-- ================================================================= -->
   <!-- SLIDE 3: MAPA TÉCNICO DE ARQUITECTURA LAMBDA & MEDALLION -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-4 sm:p-5 md:p-6 flex flex-col justify-between">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs font-mono-geo uppercase tracking-wider text-cyan-400 font-bold flex items-center gap-1.5">
@@ -270,7 +250,7 @@
 
   <!-- SLIDE 3: TOPOLOGIA FISICA DISTRIBUIDA VS ASIGNACION DE ROLES -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7">
       <div class="flex items-center justify-between mb-4">
         <span class="text-xs font-mono-geo uppercase tracking-wider text-emerald-400 font-bold">Infraestructura Real</span>
@@ -292,10 +272,10 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-headline font-bold text-sm text-white">Laptop Sayder</span>
-              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">Linux 4GB</span>
+              <span class="font-headline font-bold text-sm text-white">Nodo MinIO S3 & PostgreSQL</span>
+              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">Data Lake & DB</span>
             </div>
-            <p class="text-xs text-slate-300 mt-1 font-body">Aloja MinIO S3 (Bronze, Silver, Gold) y PostgreSQL Serving Layer (Tablas y Vistas).</p>
+            <p class="text-xs text-slate-300 mt-1 font-body">Aloja MinIO S3 (Bronze, Silver, Gold) y PostgreSQL Serving Layer (curated, staging, quality).</p>
             <span class="text-[10px] font-mono-geo text-slate-400 block mt-1">Puertos: 9000 (S3), 9001 (Console), 5432 (Postgres)</span>
           </div>
         </div>
@@ -306,8 +286,8 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-headline font-bold text-sm text-white">Laptop Josue</span>
-              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">Linux</span>
+              <span class="font-headline font-bold text-sm text-white">Nodo Apache Kafka & Connect</span>
+              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">Streaming Ingest</span>
             </div>
             <p class="text-xs text-slate-300 mt-1 font-body">Aloja Apache Kafka Broker (KRaft), Kafka Connect HTTP Source, S3 Sink y Kafdrop UI.</p>
             <span class="text-[10px] font-mono-geo text-slate-400 block mt-1">Puertos: 9092, 8083 (Connect), 9009 (Kafdrop)</span>
@@ -320,11 +300,11 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-headline font-bold text-sm text-white">Laptop Jesus</span>
-              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-bold">Windows Potente</span>
+              <span class="font-headline font-bold text-sm text-white">Nodo Apache Airflow & Spark</span>
+              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-bold">Cómputo & Orquestación</span>
             </div>
-            <p class="text-xs text-slate-300 mt-1 font-body">Aloja Apache Airflow y Spark Master/Workers (corriendo Streaming de Josue y Batch de Kevin).</p>
-            <span class="text-[10px] font-mono-geo text-slate-400 block mt-1">Puertos: 8080 (Airflow), 7077/8085 (Spark), 5050 (Trigger local red_bigdata)</span>
+            <p class="text-xs text-slate-300 mt-1 font-body">Aloja Apache Airflow y Spark Master/Workers (ejecutando streaming continuo y PySpark batch ETL).</p>
+            <span class="text-[10px] font-mono-geo text-slate-400 block mt-1">Puertos: 8080 (Airflow), 7077/8085 (Spark), 5050 (Trigger local)</span>
           </div>
         </div>
 
@@ -334,11 +314,11 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-headline font-bold text-sm text-white">Laptop Jhonatan</span>
-              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">Windows Potente</span>
+              <span class="font-headline font-bold text-sm text-white">Nodo Gobernanza & Web GIS</span>
+              <span class="text-[10px] font-mono-geo px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">Gobernanza & UI</span>
             </div>
-            <p class="text-xs text-slate-300 mt-1 font-body">Aloja Apache Atlas (Linaje), OpenMetadata (Catalogo) y TerraPulse GIS con GeoIA Copilot.</p>
-            <span class="text-[10px] font-mono-geo text-slate-400 block mt-1">Puertos: 21000 (Atlas), 8585 (OpenMetadata), 8000 (Web GIS)</span>
+            <p class="text-xs text-slate-300 mt-1 font-body">Aloja OpenMetadata (Catálogo & Linaje), Apache Atlas y SismoWatch GIS con GeoIA Copilot.</p>
+            <span class="text-[10px] font-mono-geo text-slate-400 block mt-1">Puertos: 8585 (OpenMetadata), 3000 (Web GIS), 8000 (API FastAPI)</span>
           </div>
         </div>
       </div>
@@ -346,12 +326,12 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- SLIDE 4: SAYDER - APACHE KAFKA & KAFKA CONNECT -->
+  <!-- SLIDE 4: APACHE KAFKA & KAFKA CONNECT -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Sayder" data-role="Ingestion & Streaming Engineer">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-amber-500/30">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-mono-geo uppercase tracking-wider text-amber-400 font-bold">Turno 2 - Sayder</span>
+        <span class="text-xs font-mono-geo uppercase tracking-wider text-amber-400 font-bold">Módulo 2 - Ingesta Kafka</span>
         <span class="text-xs font-mono-geo text-slate-400">Ingesta & Mensajeria en Tiempo Real</span>
       </div>
 
@@ -391,12 +371,12 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- SLIDE 5: JOSUE - SPARK STRUCTURED STREAMING -->
+  <!-- SLIDE 5: SPARK STRUCTURED STREAMING -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Josue" data-role="Real-Time Processing Engineer">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-emerald-500/30">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-mono-geo uppercase tracking-wider text-emerald-400 font-bold">Turno 3 - Josue</span>
+        <span class="text-xs font-mono-geo uppercase tracking-wider text-emerald-400 font-bold">Módulo 3 - Streaming Spark</span>
         <span class="text-xs font-mono-geo text-slate-400">Computo de Micro-lotes en Tiempo Real</span>
       </div>
 
@@ -438,10 +418,10 @@
   <!-- ================================================================= -->
   <!-- SLIDE 6: JESUS - APACHE AIRFLOW BATCH -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jesus" data-role="Orchestration & Workflow Engineer">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-purple-500/30">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-mono-geo uppercase tracking-wider text-purple-400 font-bold">Turno 4 - Jesus</span>
+        <span class="text-xs font-mono-geo uppercase tracking-wider text-purple-400 font-bold">Módulo 4 - Orquestación Airflow</span>
         <span class="text-xs font-mono-geo text-slate-400">Orquestacion & Automatizacion Batch</span>
       </div>
 
@@ -456,7 +436,7 @@
             DAG Diario a las 7:00 AM (dag_sismos_batch_usgs.py)
           </span>
           <p class="text-slate-300 font-body leading-relaxed text-xs">
-            Ejecuta cron <code class="text-purple-300">0 7 * * *</code>: Tarea 1 descarga el archivo oficial <code class="text-purple-300">all_day.geojson</code> de 24 horas y Tarea 2 lo sube a MinIO Bronze en Sayder.
+            Ejecuta cron <code class="text-purple-300">0 7 * * *</code>: Tarea 1 descarga el archivo oficial <code class="text-purple-300">all_day.geojson</code> de 24 horas y Tarea 2 lo sube a MinIO Bronze.
           </p>
           <span class="text-[11px] text-purple-400 block">Resiliencia: 2 reintentos automaticos cada 2 min</span>
         </div>
@@ -481,12 +461,12 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- SLIDE 7: KEVIN - PYSPARK BATCH ETL -->
+  <!-- SLIDE 7: PYSPARK BATCH ETL -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Kevin" data-role="Batch Processing Engineer">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-rose-500/30">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-mono-geo uppercase tracking-wider text-rose-400 font-bold">Turno 5 - Kevin</span>
+        <span class="text-xs font-mono-geo uppercase tracking-wider text-rose-400 font-bold">Módulo 5 - PySpark Batch</span>
         <span class="text-xs font-mono-geo text-slate-400">Computacion Masiva & Modelos Gold</span>
       </div>
 
@@ -527,12 +507,12 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- SLIDE 8: JHONATAN - MINIO MEDALLION & POSTGRES SERVING LAYER -->
+  <!-- SLIDE 8: MINIO MEDALLION & POSTGRES SERVING LAYER -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-cyan-500/30">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-mono-geo uppercase tracking-wider text-cyan-400 font-bold">Turno 6 - Jhonatan</span>
+        <span class="text-xs font-mono-geo uppercase tracking-wider text-cyan-400 font-bold">Módulo 6 - Serving Layer</span>
         <span class="text-xs font-mono-geo text-slate-400">Almacenamiento & Deduplicacion Lambda</span>
       </div>
 
@@ -566,12 +546,12 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- SLIDE 9: JHONATAN - GOBERNANZA APACHE ATLAS & OPENMETADATA -->
+  <!-- SLIDE 9: GOBERNANZA APACHE ATLAS & OPENMETADATA -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-purple-500/30">
       <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-mono-geo uppercase tracking-wider text-purple-400 font-bold">Turno 6 (Cont.) - Jhonatan</span>
+        <span class="text-xs font-mono-geo uppercase tracking-wider text-purple-400 font-bold">Módulo 7 - Gobernanza OpenMetadata</span>
         <span class="text-xs font-mono-geo text-slate-400">Gobernanza & Trazabilidad de Datos</span>
       </div>
 
@@ -605,15 +585,15 @@
 
       <div class="p-3.5 rounded-2xl bg-black/30 border border-white/5 text-xs font-mono-geo flex items-center justify-between text-slate-400">
         <span>Auditoria empresarial y cumplimiento de trazabilidad</span>
-        <span class="text-slate-200">Integrado en la laptop de Jhonatan</span>
+        <span class="text-slate-200">Integrado en clúster local de Yisus0708</span>
       </div>
     </div>
   </section>
 
   <!-- ================================================================= -->
-  <!-- SLIDE 10: JHONATAN - DEMOSTRACION EN VIVO TERRAPULSE GIS -->
+  <!-- SLIDE 10: DEMOSTRACION EN VIVO SISMOWATCH GIS -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Jhonatan" data-role="Tech Lead">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-6 md:p-7 border-emerald-500/30">
       <div class="flex items-center justify-between mb-4">
         <span class="text-xs font-mono-geo uppercase tracking-wider text-emerald-400 font-bold">Demostracion en Vivo</span>
@@ -663,7 +643,7 @@
   <!-- ================================================================= -->
   <!-- SLIDE 11: EQUIPO - CONCLUSIONES & RONDA DE PREGUNTAS -->
   <!-- ================================================================= -->
-  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Equipo" data-role="Defensa Final">
+  <section class="slide flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full" data-speaker="Yisus0708" data-role="Lead Data & Software Engineer">
     <div class="hud-glass rounded-3xl max-h-[calc(100vh-130px)] overflow-y-auto custom-scroll my-auto p-5 sm:p-7 md:p-8 text-center relative overflow-hidden">
       <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center text-white mx-auto shadow-xl shadow-cyan-950 mb-4">
         <span class="material-symbols-outlined text-[32px]">verified</span>
