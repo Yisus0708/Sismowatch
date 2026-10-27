@@ -3,141 +3,82 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-  <title>SismoWatch • Mission Control Táctico Geofísico</title>
+  <title>SismoWatch • Monitoreo Sísmico Global y Plataforma de Consumo</title>
   
-  <!-- Tipografías de Grado Operacional -->
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   
-  <!-- Dependencias UI -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            headline: ['Plus Jakarta Sans', 'sans-serif'],
-            mono: ['Space Grotesk', 'monospace'],
-            code: ['JetBrains Mono', 'monospace']
-          },
-          colors: {
-            void: '#070b13',
-            space: '#0c1220',
-            glass: 'rgba(15, 23, 42, 0.78)',
-            cyanGlow: '#00f2fe',
-            emeraldGlow: '#10b981',
-            roseGlow: '#f43f5e',
-            amberGlow: '#f59e0b',
-            purpleGlow: '#a855f7'
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
-    /* Efectos de Pulso Sísmico para Marcadores */
-    @keyframes seismic-pulse {
-      0% { transform: scale(0.3); opacity: 0.9; }
-      50% { opacity: 0.4; }
-      100% { transform: scale(2.6); opacity: 0; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.35); opacity: 0.95; }
+      50% { opacity: 0.6; }
+      100% { transform: scale(2.8); opacity: 0; }
     }
-    .pulse-ring {
-      animation: seismic-pulse 2.8s cubic-bezier(0.2, 0.7, 0.4, 1) infinite;
-      transform-origin: center;
-    }
+    .ring-shockwave-1 { animation: pulse-ring 3.2s cubic-bezier(0.2, 0.7, 0.4, 1) infinite; transform-origin: center; }
+    .ring-shockwave-2 { animation: pulse-ring 3.2s cubic-bezier(0.2, 0.7, 0.4, 1) infinite 1.05s; transform-origin: center; }
+    .ring-shockwave-3 { animation: pulse-ring 3.2s cubic-bezier(0.2, 0.7, 0.4, 1) infinite 2.1s; transform-origin: center; }
 
-    /* Estilos Glassmorphism Aeroespacial */
-    .mc-glass {
-      background: rgba(13, 19, 33, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+    .hud-glass {
+      background: rgba(12, 24, 38, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
     }
-    .mc-glass-glow {
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(0, 242, 254, 0.22);
-      box-shadow: 0 0 25px -5px rgba(0, 242, 254, 0.15);
-    }
-    .mc-card {
-      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-    .mc-card:hover {
-      border-color: rgba(0, 242, 254, 0.3);
-      box-shadow: 0 4px 20px -4px rgba(0, 242, 254, 0.1);
-    }
-
-    /* Scrollbars Tácticas */
-    .mc-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-    .mc-scroll::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
-    .mc-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 4px; }
-    .mc-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 242, 254, 0.4); }
-
-    /* Popups Leaflet Tácticos */
+    .custom-scroll::-webkit-scrollbar { width: 5px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
     .leaflet-popup-content-wrapper {
-      background: rgba(10, 16, 28, 0.96) !important;
-      color: #f1f5f9 !important;
-      border: 1px solid rgba(0, 242, 254, 0.3) !important;
-      border-radius: 14px !important;
-      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8) !important;
-      padding: 4px !important;
-    }
-    .leaflet-popup-tip {
-      background: rgba(10, 16, 28, 0.96) !important;
-      border: 1px solid rgba(0, 242, 254, 0.3) !important;
+      background: rgba(12, 24, 38, 0.95) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 16px !important;
     }
   </style>
 </head>
-<body class="h-full w-full overflow-hidden bg-void font-sans text-slate-100 antialiased select-none flex flex-col">
+<body class="h-full w-full overflow-hidden bg-[#07131e] font-sans text-slate-100 antialiased select-none">
 
 <!-- ================================================================= -->
-<!-- MODAL DE INICIO DE SESIÓN JWT (MISSION CONTROL LOGIN) -->
+<!-- MODAL DE INICIO DE SESIÓN JWT & SELECCIÓN DE ROL -->
 <!-- ================================================================= -->
-<div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4">
-  <div class="mc-glass max-w-md w-full rounded-3xl p-6 sm:p-8 border border-cyanGlow/30 shadow-2xl relative">
-    <div class="flex items-center gap-3.5 mb-6">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-teal-600 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
-        <span class="material-symbols-outlined text-[28px]">radar</span>
+<div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+  <div class="hud-glass max-w-md w-full rounded-3xl p-6 sm:p-8 border border-white/20 shadow-2xl relative">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-800 flex items-center justify-center text-white shadow-lg">
+        <span class="material-symbols-outlined text-[28px]">lock</span>
       </div>
       <div>
-        <h2 class="text-xl font-headline font-bold text-white tracking-tight flex items-center gap-2">
-          SismoWatch <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">OPERACIONAL</span>
-        </h2>
-        <p class="text-xs text-slate-400 font-mono">Consola de Misión • Acceso JWT con RBAC</p>
+        <h2 class="text-xl font-headline font-bold text-white">SismoWatch • Iniciar Sesión</h2>
+        <p class="text-xs text-slate-400 font-mono">Acceso protegido por JWT y Roles RBAC</p>
       </div>
     </div>
 
-    <!-- Error de Login -->
-    <div id="login-error" class="hidden mb-4 p-3 rounded-xl bg-rose-950/70 border border-rose-500/40 text-xs text-rose-300 font-mono"></div>
+    <!-- Mensaje de Error en Login -->
+    <div id="login-error" class="hidden mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-300 font-mono"></div>
 
     <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
       <div>
-        <label class="block text-xs font-mono text-slate-300 mb-1">Identificador de Operador</label>
-        <input id="login-username" type="text" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyanGlow font-mono" placeholder="admin o viewer">
+        <label class="block text-xs font-mono text-slate-300 mb-1">Usuario</label>
+        <input id="login-username" type="text" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono" placeholder="admin o viewer">
       </div>
       <div>
-        <label class="block text-xs font-mono text-slate-300 mb-1">Clave de Seguridad</label>
-        <input id="login-password" type="password" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyanGlow font-mono" placeholder="••••••••">
+        <label class="block text-xs font-mono text-slate-300 mb-1">Contraseña</label>
+        <input id="login-password" type="password" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono" placeholder="••••••••">
       </div>
 
-      <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 text-slate-950 font-mono font-bold text-sm transition-all duration-300 shadow-lg shadow-cyan-500/25">
-        Autenticar e Ingresar a la Consola
+      <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-sm transition shadow-lg shadow-emerald-950/50">
+        Ingresar al Sistema
       </button>
     </form>
 
     <div class="mt-6 pt-4 border-t border-white/10 text-center">
-      <p class="text-xs text-slate-400 font-mono mb-2.5">Acceso rápido de evaluación:</p>
+      <p class="text-xs text-slate-400 font-mono mb-2.5">Acceso rápido para evaluación de desempeño:</p>
       <div class="grid grid-cols-2 gap-2">
         <button onclick="quickLogin('viewer', 'viewer123')" class="px-3 py-1.5 rounded-xl bg-sky-950/50 hover:bg-sky-900/70 text-sky-300 border border-sky-500/30 font-mono text-xs font-semibold transition">
           👤 Rol Viewer
@@ -151,364 +92,225 @@
 </div>
 
 <!-- ================================================================= -->
-<!-- 1. HEADER SUPERIOR DE CONTROL DE MISIÓN (TOP COMMAND BAR) -->
+<!-- CONTENEDOR PRINCIPAL GIS Y MAPA ORIGINAL A PANTALLA COMPLETA -->
 <!-- ================================================================= -->
-<header class="h-16 px-4 shrink-0 mc-glass border-b border-white/10 flex items-center justify-between gap-4 z-30">
-  <!-- Logotipo y Nombre de Misión -->
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-slate-950 shadow-md shadow-cyan-500/30 font-bold">
-      <span class="material-symbols-outlined text-[24px]">public</span>
-    </div>
-    <div>
-      <div class="flex items-center gap-2">
-        <span class="font-headline font-black text-lg tracking-tight text-white">SISMO<span class="text-cyan-400">WATCH</span></span>
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 tracking-wider">
-          MISSION CONTROL
-        </span>
+<div class="relative w-screen h-screen overflow-hidden">
+  <!-- Mapa Leaflet Pantalla Completa Original -->
+  <div id="map" class="absolute inset-0 z-0"></div>
+
+  <!-- 1. BARRA SUPERIOR HUD TÁCTICA -->
+  <header class="absolute top-4 left-4 right-4 z-30 pointer-events-none flex items-center justify-between gap-3">
+    <!-- Logotipo y Estado En Vivo -->
+    <div class="pointer-events-auto hud-glass rounded-2xl px-4 py-2.5 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-800 flex items-center justify-center text-white shadow-lg">
+        <span class="material-symbols-outlined text-[24px]">public</span>
       </div>
-      <p class="text-[11px] text-slate-400 font-mono">Red Sísmica Global • Arquitectura Medallón</p>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-headline font-extrabold text-base tracking-tight text-white">SismoWatch</span>
+          <span id="live-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> EN VIVO (SSE)
+          </span>
+        </div>
+        <p class="text-xs text-slate-300 font-mono flex items-center gap-1.5">
+          <span id="user-role-badge" class="text-sky-400 font-bold">Sesión: --</span>
+          <span class="text-slate-500">•</span>
+          <span id="utc-clock" class="text-emerald-400 font-semibold">--:--:-- UTC</span>
+        </p>
+      </div>
     </div>
-  </div>
 
-  <!-- Telemetría Central en Vivo (Radar, Reloj Atómico, Estado) -->
-  <div class="hidden lg:flex items-center gap-6 px-4 py-1.5 rounded-2xl bg-black/40 border border-white/5">
-    <div class="flex items-center gap-2">
-      <span id="live-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span class="w-2 h-2 rounded-full bg-emerald-500 -ml-3.5"></span>
-        TELEMETRÍA EN VIVO (SSE)
-      </span>
-    </div>
-    <div class="h-4 w-px bg-white/10"></div>
-    <div class="flex items-center gap-2 text-xs font-mono text-slate-300">
-      <span class="material-symbols-outlined text-[16px] text-cyan-400">schedule</span>
-      <span id="utc-clock" class="text-white font-bold tracking-wider">--:--:-- UTC</span>
-    </div>
-    <div class="h-4 w-px bg-white/10"></div>
-    <div class="flex items-center gap-2 text-xs font-mono">
-      <span class="text-slate-400">Sesión:</span>
-      <span id="user-role-badge" class="text-cyan-400 font-bold">--</span>
-    </div>
-  </div>
-
-  <!-- Controles y Acciones Rápidas -->
-  <div class="flex items-center gap-2">
-    <!-- Botón Toggle Copiloto IA -->
-    <button onclick="toggleCopilot()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-teal-500/20 hover:from-cyan-500/30 hover:to-teal-500/30 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-cyan-500/10" title="Alternar panel del copiloto IA">
-      <span class="material-symbols-outlined text-[18px] text-cyan-400">smart_toy</span>
-      <span class="hidden sm:inline">Copiloto IA</span>
-    </button>
-
-    <!-- Botón Placas Tectónicas -->
-    <button onclick="togglePlates()" class="w-9 h-9 rounded-xl mc-card hover:bg-white/10 text-amber-400 hover:text-white flex items-center justify-center transition" title="Alternar Fallas y Placas Tectónicas">
-      <span class="material-symbols-outlined text-[18px]">layers</span>
-    </button>
-
-    <!-- Botón Refrescar -->
-    <button onclick="refreshData()" class="w-9 h-9 rounded-xl mc-card hover:bg-white/10 text-slate-200 hover:text-cyan-400 flex items-center justify-center transition" title="Refrescar Telemetría">
-      <span class="material-symbols-outlined text-[18px]" id="refresh-icon">sync</span>
-    </button>
-
-    <!-- Botón Salir -->
-    <button onclick="logout()" class="w-9 h-9 rounded-xl mc-card hover:bg-rose-500/20 text-rose-400 hover:text-rose-200 flex items-center justify-center transition" title="Cerrar Sesión">
-      <span class="material-symbols-outlined text-[18px]">logout</span>
-    </button>
-  </div>
-</header>
-
-<!-- ================================================================= -->
-<!-- 2. ESPACIO DE TRABAJO PRINCIPAL (SIDEBAR + GRID + COPILOTO IA) -->
-<!-- ================================================================= -->
-<div class="flex-1 flex overflow-hidden relative">
-
-  <!-- =============================================================== -->
-  <!-- BARRA LATERAL TÁCTICA (SIDEBAR DOCK) -->
-  <!-- =============================================================== -->
-  <aside class="w-14 sm:w-16 shrink-0 mc-glass border-r border-white/10 flex flex-col items-center py-4 justify-between z-20">
-    <div class="flex flex-col items-center gap-3 w-full px-2">
-      <!-- Monitoreo Táctico -->
-      <button onclick="location.hash='#tactico'" class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center justify-center hover:scale-105 transition" title="Consola Táctica">
-        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+    <!-- Barra de Navegación y Vistas -->
+    <div class="pointer-events-auto hidden md:flex items-center hud-glass rounded-2xl p-1 gap-1">
+      <button onclick="toggleModalChat()" class="px-3 py-1.5 rounded-xl text-emerald-300 hover:text-white hover:bg-emerald-500/15 border border-emerald-500/30 font-mono text-xs font-medium transition flex items-center gap-1.5 shadow-lg shadow-emerald-950/40">
+        <span class="material-symbols-outlined text-[16px] text-emerald-400">forum</span> Chat IA
       </button>
 
-      <!-- Reportes IA Diarios -->
-      <button onclick="toggleModalReportes()" class="w-10 h-10 rounded-xl mc-card hover:bg-amber-500/20 text-amber-400 flex items-center justify-center hover:scale-105 transition" title="Reportes Geofísicos IA">
-        <span class="material-symbols-outlined text-[20px]">psychology</span>
+      <button onclick="toggleModalReportes()" class="px-3 py-1.5 rounded-xl text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/30 font-mono text-xs font-medium transition flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[16px] text-amber-400">psychology</span> Reportes IA
       </button>
 
-      <!-- Calidad & Pipeline -->
-      <button onclick="toggleModalPipeline()" class="w-10 h-10 rounded-xl mc-card hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center hover:scale-105 transition" title="Calidad & Pipeline Airflow/Spark">
-        <span class="material-symbols-outlined text-[20px]">fact_check</span>
+      <button onclick="toggleModalPipeline()" class="px-3 py-1.5 rounded-xl text-cyan-300 hover:text-white hover:bg-cyan-500/15 border border-cyan-500/30 font-mono text-xs font-medium transition flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[16px] text-cyan-400">fact_check</span> Calidad & Pipeline
       </button>
 
-      <!-- OpenMetadata -->
-      <a href="http://localhost:8585" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-xl mc-card hover:bg-purple-500/20 text-purple-400 flex items-center justify-center hover:scale-105 transition" title="Abrir Gobernanza y Linaje en OpenMetadata">
-        <span class="material-symbols-outlined text-[20px]">account_tree</span>
+      <!-- Botón OpenMetadata Gobernanza -->
+      <a href="http://localhost:8585" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl text-purple-300 hover:text-white hover:bg-purple-500/20 border border-purple-500/40 font-mono text-xs font-medium transition flex items-center gap-1.5" title="Abrir Catálogo y Linaje en OpenMetadata">
+        <span class="material-symbols-outlined text-[16px] text-purple-400">account_tree</span> OpenMetadata
       </a>
 
-      <!-- Exportar CSV -->
-      <button onclick="exportarCSV()" class="w-10 h-10 rounded-xl mc-card hover:bg-teal-500/20 text-teal-400 flex items-center justify-center hover:scale-105 transition" title="Exportar CSV Oficial">
-        <span class="material-symbols-outlined text-[20px]">download</span>
+      <!-- Botón Exportar CSV -->
+      <button onclick="exportarCSV()" class="px-3 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 font-mono text-xs font-medium transition flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[16px] text-emerald-400">download</span> Exportar CSV
+      </button>
+
+      <!-- Botón Salir -->
+      <button onclick="logout()" class="px-2.5 py-1.5 rounded-xl text-rose-400 hover:text-white hover:bg-rose-500/20 font-mono text-xs font-medium transition" title="Cerrar sesión">
+        <span class="material-symbols-outlined text-[16px]">logout</span>
       </button>
     </div>
 
-    <!-- Acciones de Administrador -->
-    <div id="admin-sidebar-tools" class="hidden flex flex-col items-center gap-2.5 w-full px-2 pt-3 border-t border-white/10">
-      <button onclick="adminTriggerBackfill()" class="w-10 h-10 rounded-xl bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-500/40 flex items-center justify-center transition" title="Disparar Backfill Histórico">
-        <span class="material-symbols-outlined text-[18px]">history</span>
+    <!-- Controles Rápidos -->
+    <div class="pointer-events-auto flex items-center gap-2">
+      <button onclick="refreshData()" class="hud-glass w-9 h-9 rounded-xl flex items-center justify-center text-slate-200 hover:text-white transition" title="Refrescar">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
       </button>
-      <button onclick="adminTriggerRegenerateReport()" class="w-10 h-10 rounded-xl bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/40 flex items-center justify-center transition" title="Forzar Reporte con Gemini">
-        <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+      <button onclick="togglePlates()" class="hud-glass w-9 h-9 rounded-xl flex items-center justify-center text-emerald-400 hover:text-white transition" title="Placas Tectónicas">
+        <span class="material-symbols-outlined text-[18px]">layers</span>
       </button>
+    </div>
+  </header>
+
+  <!-- 2. TARJETA FLOTANTE DE KPIS (ÚLTIMAS 24H) -->
+  <div class="absolute top-20 left-4 z-20 w-[300px] sm:w-[340px] pointer-events-auto">
+    <div class="hud-glass rounded-3xl p-4 sm:p-5 border-emerald-500/30 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <span class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">Telemetría 24 Horas</span>
+        <span id="kpi-quality-score" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          Calidad: 100%
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-center">
+        <div class="p-2.5 rounded-2xl bg-white/5 border border-white/5">
+          <p class="text-[10px] text-slate-400 font-mono uppercase">Total Sismos</p>
+          <p id="kpi-total" class="text-2xl font-headline font-black text-white">--</p>
+        </div>
+        <div class="p-2.5 rounded-2xl bg-white/5 border border-white/5">
+          <p class="text-[10px] text-slate-400 font-mono uppercase">Magnitud Máxima</p>
+          <p id="kpi-max-mag" class="text-2xl font-headline font-black text-rose-400">--</p>
+        </div>
+        <div class="p-2.5 rounded-2xl bg-white/5 border border-white/5">
+          <p class="text-[10px] text-slate-400 font-mono uppercase">Mag. Promedio</p>
+          <p id="kpi-avg-mag" class="text-lg font-headline font-bold text-amber-300">--</p>
+        </div>
+        <div class="p-2.5 rounded-2xl bg-white/5 border border-white/5">
+          <p class="text-[10px] text-slate-400 font-mono uppercase">Alertas Tsunami</p>
+          <p id="kpi-tsunami" class="text-lg font-headline font-bold text-sky-400">--</p>
+        </div>
+      </div>
+
+      <!-- Acciones de Administrador -->
+      <div id="admin-actions-card" class="hidden pt-2 border-t border-white/10 space-y-1.5">
+        <p class="text-[10px] font-mono text-purple-300 uppercase font-bold">Herramientas de Administrador</p>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="adminTriggerBackfill()" class="px-2 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-500/40 font-mono text-[11px] font-bold transition">
+            Lanzar Backfill
+          </button>
+          <button onclick="adminTriggerRegenerateReport()" class="px-2 py-1.5 rounded-xl bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold transition">
+            Regenerar IA
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PANEL LATERAL DERECHO: ÚLTIMOS EVENTOS SÍSMICOS -->
+  <aside class="absolute top-20 right-4 bottom-6 z-20 w-[320px] sm:w-[360px] pointer-events-auto flex flex-col hud-glass rounded-3xl p-4 shadow-2xl">
+    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <h3 class="text-sm font-headline font-bold text-white flex items-center gap-2">
+        <span class="material-symbols-outlined text-rose-400 text-[18px]">emergency</span> Eventos en Curated
+      </h3>
+      <span id="event-count" class="text-xs font-mono text-slate-400">0 cargados</span>
+    </div>
+
+    <!-- Lista con Scroll -->
+    <div id="events-list" class="flex-1 overflow-y-auto custom-scroll space-y-2 mt-3 pr-1">
+      <div class="text-center py-10 text-xs text-slate-400 font-mono">Cargando eventos sísmicos...</div>
     </div>
   </aside>
 
-  <!-- =============================================================== -->
-  <!-- ÁREA CENTRAL: REJILLA MODULAR DE OPERACIONES -->
-  <!-- =============================================================== -->
-  <main class="flex-1 flex flex-col overflow-hidden p-3 sm:p-4 gap-3 min-w-0 bg-space/60">
-
-    <!-- FILA 1: TARJETAS KPI DE ALTA GAMA -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
-      <!-- KPI 1: Sismos Totales -->
-      <div class="mc-glass rounded-2xl p-3 sm:p-3.5 mc-card transition flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Telemetría 24h</span>
-          <div class="flex items-baseline gap-1.5 mt-0.5">
-            <span id="kpi-total" class="text-2xl sm:text-3xl font-mono font-bold text-white tracking-tight">--</span>
-            <span class="text-[10px] font-mono text-cyan-400">sismos</span>
-          </div>
-          <span class="text-[10px] font-mono text-slate-500">Capa Silver Curated</span>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-          <span class="material-symbols-outlined text-[20px]">sensors</span>
-        </div>
-      </div>
-
-      <!-- KPI 2: Magnitud Máxima -->
-      <div class="mc-glass rounded-2xl p-3 sm:p-3.5 mc-card transition flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Magnitud Pico</span>
-          <div class="flex items-baseline gap-1.5 mt-0.5">
-            <span class="text-sm font-mono text-rose-400">M</span>
-            <span id="kpi-max-mag" class="text-2xl sm:text-3xl font-mono font-bold text-rose-400 tracking-tight">--</span>
-          </div>
-          <span class="text-[10px] font-mono text-slate-500">Energía Máx. Liberada</span>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-          <span class="material-symbols-outlined text-[20px]">warning</span>
-        </div>
-      </div>
-
-      <!-- KPI 3: Alertas Tsunami -->
-      <div class="mc-glass rounded-2xl p-3 sm:p-3.5 mc-card transition flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Alertas Tsunami</span>
-          <div class="flex items-baseline gap-1.5 mt-0.5">
-            <span id="kpi-tsunami" class="text-2xl sm:text-3xl font-mono font-bold text-sky-400 tracking-tight">--</span>
-            <span class="text-[10px] font-mono text-sky-400">activas</span>
-          </div>
-          <span class="text-[10px] font-mono text-slate-500">Protocolo NOAA / USGS</span>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-          <span class="material-symbols-outlined text-[20px]">tsunami</span>
-        </div>
-      </div>
-
-      <!-- KPI 4: Índice de Calidad -->
-      <div class="mc-glass rounded-2xl p-3 sm:p-3.5 mc-card transition flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Salud de Datos</span>
-          <div class="flex items-baseline gap-1.5 mt-0.5">
-            <span id="kpi-quality-score" class="text-2xl sm:text-3xl font-mono font-bold text-emerald-400 tracking-tight">100%</span>
-          </div>
-          <span class="text-[10px] font-mono text-slate-500">Reglas PySpark Auditadas</span>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-          <span class="material-symbols-outlined text-[20px]">verified</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- FILA 2: REJILLA DIVIDIDA (MAPA TÁCTICO + FEED EN TIEMPO REAL) -->
-    <section class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
-      
-      <!-- MAPA TÁCTICO GIS (Leaflet Dark) -->
-      <div class="lg:col-span-8 mc-glass rounded-3xl p-3 flex flex-col relative overflow-hidden border border-white/10 shadow-2xl">
-        <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/5">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            <h3 class="text-xs font-headline font-bold text-white uppercase tracking-wider">Carta Geofísica Global</h3>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/40 text-slate-400">CartoDB Dark Matter</span>
-          </div>
-          <!-- Leyenda de Magnitud -->
-          <div class="hidden sm:flex items-center gap-3 text-[10px] font-mono">
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> M&lt;4 Leve</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> M4-5.9 Moderado</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> M6+ Severo</span>
-          </div>
-        </div>
-
-        <div id="map" class="flex-1 w-full rounded-2xl overflow-hidden z-10"></div>
-      </div>
-
-      <!-- FEED SÍSMICO TÁCTICO EN VIVO -->
-      <div class="lg:col-span-4 mc-glass rounded-3xl p-3.5 flex flex-col min-h-0 border border-white/10 shadow-2xl">
-        <!-- Cabecera del Feed -->
-        <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-rose-400 text-[18px]">emergency</span>
-            <h3 class="text-xs font-headline font-bold text-white uppercase tracking-wider">Feed en Tiempo Real</h3>
-          </div>
-          <span id="event-count" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
-            0 sismos
-          </span>
-        </div>
-
-        <!-- Filtros Rápidos & Buscador -->
-        <div class="py-2 space-y-2 border-b border-white/5">
-          <div class="flex items-center gap-1 overflow-x-auto mc-scroll text-[10px] font-mono pb-0.5">
-            <button onclick="filterEvents('all')" id="filter-btn-all" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 whitespace-nowrap">Todos</button>
-            <button onclick="filterEvents('m3')" id="filter-btn-m3" class="px-2.5 py-1 rounded-lg mc-card text-slate-300 hover:text-white whitespace-nowrap">M3.0+</button>
-            <button onclick="filterEvents('m5')" id="filter-btn-m5" class="px-2.5 py-1 rounded-lg mc-card text-slate-300 hover:text-white whitespace-nowrap">M5.0+ Crítico</button>
-            <button onclick="filterEvents('tsunami')" id="filter-btn-tsunami" class="px-2.5 py-1 rounded-lg mc-card text-slate-300 hover:text-white whitespace-nowrap">Tsunami</button>
-          </div>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-2.5 top-2 text-[16px] text-slate-400">search</span>
-            <input id="events-search-input" oninput="handleSearchEvent(this.value)" type="text" placeholder="Buscar por país o región..." class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyanGlow font-mono">
-          </div>
-        </div>
-
-        <!-- Lista de Sismos con Scroll Táctico -->
-        <div id="events-list" class="flex-1 overflow-y-auto mc-scroll space-y-2 mt-2 pr-1">
-          <div class="text-center py-12 text-xs text-slate-500 font-mono">Esperando telemetría sísmica...</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FILA 3: SERIE TEMPORAL HORARIA Y BARRA DE ESTADO INFERIOR -->
-    <section class="h-28 shrink-0 mc-glass rounded-2xl p-2.5 flex items-center justify-between gap-4 border border-white/10 overflow-hidden">
-      <!-- Mini Gráfico Chart.js -->
-      <div class="flex-1 h-full flex flex-col justify-center">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-[14px] text-cyan-400">show_chart</span>
-            Actividad Sísmica por Bloques Horarios (Últimas 24h)
-          </span>
-          <span id="chart-max-label" class="text-[10px] font-mono text-cyan-300">PySpark Analytics</span>
-        </div>
-        <div class="h-16 w-full">
-          <canvas id="timeseries-chart"></canvas>
-        </div>
-      </div>
-
-      <!-- Resumen Rápido de Regiones Activas -->
-      <div class="hidden md:flex flex-col justify-center w-72 pl-4 border-l border-white/10 text-xs font-mono">
-        <span class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Epicentros Frecuentes</span>
-        <div id="top-regions-chips" class="flex flex-wrap gap-1">
-          <span class="px-2 py-0.5 rounded bg-white/5 text-[10px] text-slate-300 border border-white/5">Alaska</span>
-          <span class="px-2 py-0.5 rounded bg-white/5 text-[10px] text-slate-300 border border-white/5">California</span>
-          <span class="px-2 py-0.5 rounded bg-white/5 text-[10px] text-slate-300 border border-white/5">Hawái</span>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- =============================================================== -->
-  <!-- 3. PANEL ACOPLADO DE COPILOTO IA (GEMINI 1.5 FLASH DOCKED) -->
-  <!-- =============================================================== -->
-  <aside id="copilot-panel" class="w-96 shrink-0 mc-glass-glow border-l border-cyanGlow/20 flex flex-col z-20 transition-all duration-300">
-    <!-- Cabecera del Copiloto -->
-    <div class="p-3.5 border-b border-white/10 flex items-center justify-between bg-black/30">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-cyan-500/20">
-          <span class="material-symbols-outlined text-[18px]">smart_toy</span>
-        </div>
-        <div>
-          <h3 class="font-headline font-bold text-xs text-white flex items-center gap-1.5">
-            Copiloto Geofísico IA
-            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Gemini</span>
-          </h3>
-          <p class="text-[10px] text-slate-400 font-mono">Acceso a Capas Silver & Gold</p>
-        </div>
-      </div>
-      <button onclick="toggleCopilot()" class="w-7 h-7 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition" title="Colapsar panel">
-        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-      </button>
-    </div>
-
-    <!-- Sugerencias Rápidas de Pregunta (Chips de un Toque) -->
-    <div class="p-2.5 bg-black/20 border-b border-white/5 flex flex-col gap-1.5 text-[11px] font-mono">
-      <span class="text-[9px] text-slate-500 uppercase tracking-wider">Consultas Tácticas Recomendadas:</span>
-      <div class="flex flex-col gap-1">
-        <button onclick="sendQuickPrompt('¿Qué datos pasaron a silver o a gold?')" class="text-left px-2.5 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/25 transition truncate flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[14px]">bolt</span>
-          <span>¿Qué datos pasaron a Silver/Gold?</span>
-        </button>
-        <button onclick="sendQuickPrompt('¿En qué país ocurrió el sismo más fuerte y cuáles fueron las regiones más activas?')" class="text-left px-2.5 py-1.5 rounded-lg bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 border border-sky-500/25 transition truncate flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[14px]">public</span>
-          <span>¿En qué país ocurrió el sismo pico?</span>
-        </button>
-        <button onclick="sendQuickPrompt('¿Hubo alertas de tsunami activas o sismos críticos mayores a M5.0?')" class="text-left px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/25 transition truncate flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[14px]">warning</span>
-          <span>¿Alertas de tsunami o sismos críticos?</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Historial de Conversación -->
-    <div id="chat-messages" class="flex-1 overflow-y-auto mc-scroll p-3 space-y-3 text-xs">
-      <!-- Mensaje de Bienvenida -->
-      <div class="flex items-start gap-2">
-        <div class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0 border border-cyan-500/30">
-          <span class="material-symbols-outlined text-[14px]">psychology</span>
-        </div>
-        <div class="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 space-y-1 leading-relaxed max-w-[88%]">
-          <p class="font-bold text-cyan-300 text-[11px]">Centro de Inteligencia SismoWatch</p>
-          <p class="text-xs">Monitoreando en tiempo real las capas <b>Silver</b> (sismos limpios) y <b>Gold</b> (resúmenes analíticos).</p>
-          <p class="text-[10px] text-slate-400">Pregúntame cualquier dato geofísico o estadísticas del pipeline.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Indicador de Carga / Análisis -->
-    <div id="chat-typing-indicator" class="hidden py-1.5 px-3 text-[11px] font-mono text-cyan-400 flex items-center gap-2 bg-black/30 border-t border-white/5">
-      <span class="animate-spin material-symbols-outlined text-[14px]">sync</span>
-      <span>Consultando capas y analizando con Gemini 1.5...</span>
-    </div>
-
-    <!-- Input y Botón de Envío -->
-    <form onsubmit="handleChatSubmit(event)" class="p-2.5 border-t border-white/10 bg-black/40 flex items-center gap-2">
-      <input id="chat-input" type="text" autocomplete="off" placeholder="Pregunta sobre sismos, Silver, Gold, países..." class="flex-1 px-3 py-2 rounded-xl bg-slate-900/90 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyanGlow font-mono">
-      <button type="submit" id="chat-send-btn" class="w-9 h-9 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center transition shadow-md shadow-cyan-500/20">
-        <span class="material-symbols-outlined text-[18px]">send</span>
-      </button>
-    </form>
-  </aside>
-
+  <!-- 4. BOTÓN FLOTANTE EN ESQUINA INFERIOR DERECHA (CHAT IA) -->
+  <div class="fixed bottom-6 right-6 z-30 pointer-events-auto">
+    <button onclick="toggleModalChat()" class="hud-glass px-4 py-3 rounded-full flex items-center gap-2.5 text-white hover:scale-105 transition-all duration-300 shadow-2xl border-emerald-500/40 hover:border-emerald-400 group">
+      <span class="relative flex h-3 w-3">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+      </span>
+      <span class="material-symbols-outlined text-emerald-400 group-hover:rotate-12 transition">forum</span>
+      <span class="font-headline font-bold text-xs tracking-wide">Chat IA SismoWatch</span>
+    </button>
+  </div>
 </div>
 
 <!-- ================================================================= -->
-<!-- 4. MODALES TÁCTICOS (REPORTES IA Y CALIDAD PIPELINE) -->
+<!-- VENTANA HUD CHAT IA (100% LIBRE, SIN PREGUNTAS PREDETERMINADAS) -->
+<!-- ================================================================= -->
+<div id="modal-chat-ia" class="hidden fixed inset-0 z-50 flex items-center justify-center sm:justify-end sm:items-end sm:p-6 bg-black/60 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none p-3 pointer-events-none">
+  <div class="pointer-events-auto hud-glass max-w-lg w-full h-[600px] max-h-[92vh] rounded-3xl p-5 border border-emerald-500/40 flex flex-col shadow-2xl relative">
+    
+    <!-- Encabezado del Chat -->
+    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-800 flex items-center justify-center text-white shadow-md">
+          <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+        </div>
+        <div>
+          <h3 class="font-headline font-bold text-sm text-white flex items-center gap-2">
+            Asistente Geofísico IA
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Gemini 1.5 Flash
+            </span>
+          </h3>
+          <p class="text-[11px] text-slate-400 font-mono">Acceso a Capas Silver, Gold y Sismos Globales</p>
+        </div>
+      </div>
+      <button onclick="toggleModalChat()" class="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Historial de Conversación -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto custom-scroll py-3 space-y-3 pr-1 text-xs">
+      <!-- Mensaje Inicial de Bienvenida -->
+      <div class="flex items-start gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-emerald-600/80 flex items-center justify-center text-white shrink-0">
+          <span class="material-symbols-outlined text-[16px]">psychology</span>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 space-y-1.5 leading-relaxed max-w-[85%]">
+          <p class="font-bold text-emerald-400">¡Hola! Soy el Asistente IA de SismoWatch.</p>
+          <p>Tengo conexión directa con el <b>Pool de Google AI Studio (Gemini 1.5 Flash)</b> y acceso a la base de datos de las capas <b>Silver y Gold</b>.</p>
+          <p class="text-[11px] text-slate-400">Escribe abajo cualquier pregunta sobre sismos, capas Medallón o regiones geofísicas.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicador de Escribiendo (Carga) -->
+    <div id="chat-typing-indicator" class="hidden py-1 px-3 text-[11px] font-mono text-emerald-400 flex items-center gap-2">
+      <span class="animate-spin material-symbols-outlined text-[14px]">progress_activity</span>
+      <span>Consultando capas Silver/Gold y analizando con Gemini...</span>
+    </div>
+
+    <!-- Barra de Entrada y Envío -->
+    <form onsubmit="handleChatSubmit(event)" class="pt-2 border-t border-white/10 flex items-center gap-2">
+      <input id="chat-input" type="text" autocomplete="off" placeholder="Escribe tu pregunta sobre sismos, Silver o Gold..." class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono">
+      <button type="submit" id="chat-send-btn" class="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs transition flex items-center gap-1 shadow-md shadow-emerald-950/50">
+        <span class="material-symbols-outlined text-[16px]">send</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- MODALES INTERACTIVOS (REPORTES IA, PIPELINE) -->
 <!-- ================================================================= -->
 
 <!-- MODAL REPORTES IA -->
-<div id="modal-reportes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-  <div class="mc-glass max-w-3xl w-full max-h-[85vh] rounded-3xl p-6 border border-amber-500/30 flex flex-col shadow-2xl">
+<div id="modal-reportes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+  <div class="hud-glass max-w-3xl w-full max-h-[85vh] rounded-3xl p-6 border border-amber-500/30 flex flex-col shadow-2xl">
     <div class="flex items-center justify-between pb-3 border-b border-white/10">
-      <div class="flex items-center gap-2 text-amber-400 font-headline font-bold text-base">
-        <span class="material-symbols-outlined text-[22px]">psychology</span>
-        <span>Historial de Reportes Ejecutivos IA (Gemini)</span>
+      <div class="flex items-center gap-2 text-amber-400 font-headline font-bold text-lg">
+        <span class="material-symbols-outlined text-[24px]">psychology</span> Historial de Reportes Ejecutivos IA
       </div>
-      <button onclick="toggleModalReportes()" class="text-slate-400 hover:text-white transition">
+      <button onclick="toggleModalReportes()" class="text-slate-400 hover:text-white">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
-    <div id="reportes-body" class="flex-1 overflow-y-auto mc-scroll py-4 space-y-3">
-      <div class="text-center py-10 text-xs text-slate-400 font-mono">Consultando reportes geofísicos...</div>
+    <div id="reportes-body" class="flex-1 overflow-y-auto custom-scroll py-4 space-y-4">
+      <div class="text-center py-10 text-xs text-slate-400 font-mono">Consultando reportes diarios...</div>
     </div>
     <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
-      <button onclick="exportarCSV()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition">
+      <button onclick="exportarCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold">
         Exportar CSV Oficial
       </button>
     </div>
@@ -516,25 +318,24 @@
 </div>
 
 <!-- MODAL PIPELINE & CALIDAD -->
-<div id="modal-pipeline" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-  <div class="mc-glass max-w-2xl w-full max-h-[85vh] rounded-3xl p-6 border border-cyan-500/30 flex flex-col shadow-2xl">
+<div id="modal-pipeline" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+  <div class="hud-glass max-w-2xl w-full max-h-[85vh] rounded-3xl p-6 border border-cyan-500/30 flex flex-col shadow-2xl">
     <div class="flex items-center justify-between pb-3 border-b border-white/10">
-      <div class="flex items-center gap-2 text-cyan-400 font-headline font-bold text-base">
-        <span class="material-symbols-outlined text-[22px]">fact_check</span>
-        <span>Estado del Pipeline & Calidad de Datos</span>
+      <div class="flex items-center gap-2 text-cyan-400 font-headline font-bold text-lg">
+        <span class="material-symbols-outlined text-[24px]">fact_check</span> Estado del Pipeline & Calidad de Datos
       </div>
-      <button onclick="toggleModalPipeline()" class="text-slate-400 hover:text-white transition">
+      <button onclick="toggleModalPipeline()" class="text-slate-400 hover:text-white">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
-    <div id="pipeline-body" class="flex-1 overflow-y-auto mc-scroll py-4 space-y-3">
+    <div id="pipeline-body" class="flex-1 overflow-y-auto custom-scroll py-4 space-y-3">
       <div class="text-center py-10 text-xs text-slate-400 font-mono">Cargando estado...</div>
     </div>
   </div>
 </div>
 
 <!-- ================================================================= -->
-<!-- SCRIPTS DE CLIENTE: CONTROL DE MISIÓN, MAPA, SSE, CHART Y CHAT -->
+<!-- SCRIPTS DE CLIENTE: AUTENTICACIÓN, MAPA ORIGINAL, SSE Y CHAT -->
 <!-- ================================================================= -->
 <script>
   const API_BASE = "http://localhost:8000";
@@ -542,9 +343,6 @@
   let authToken = localStorage.getItem("sismowatch_token") || "";
   let userRole = localStorage.getItem("sismowatch_role") || "";
   let eventSource = null;
-  let allEvents = [];
-  let currentFilter = 'all';
-  let timeseriesChartInstance = null;
 
   // 1. Manejo de Autenticación JWT
   function checkSession() {
@@ -559,15 +357,16 @@
 
   function applyRolePermissions() {
     const badge = document.getElementById("user-role-badge");
-    badge.innerText = userRole.toUpperCase();
+    badge.innerText = `Rol: ${userRole.toUpperCase()}`;
 
-    const adminTools = document.getElementById("admin-sidebar-tools");
+    const adminActions = document.getElementById("admin-actions-card");
+
     if (userRole === "admin") {
       badge.className = "text-purple-400 font-bold";
-      if (adminTools) adminTools.classList.remove("hidden");
+      if (adminActions) adminActions.classList.remove("hidden");
     } else {
-      badge.className = "text-cyan-400 font-bold";
-      if (adminTools) adminTools.classList.add("hidden");
+      badge.className = "text-sky-400 font-bold";
+      if (adminActions) adminActions.classList.add("hidden");
     }
   }
 
@@ -593,7 +392,9 @@
         body: JSON.stringify({ username, password })
       });
 
-      if (!res.ok) throw new Error("Credenciales inválidas de operador.");
+      if (!res.ok) {
+        throw new Error("Credenciales inválidas");
+      }
 
       const data = await res.json();
       authToken = data.access_token;
@@ -605,7 +406,7 @@
       applyRolePermissions();
       initApp();
     } catch (err) {
-      errDiv.innerText = err.message || "Error al autenticar.";
+      errDiv.innerText = err.message || "Error al autenticar";
       errDiv.classList.remove("hidden");
     }
   }
@@ -631,35 +432,31 @@
     return res;
   }
 
-  // 2. Inicialización de la Aplicación y Mapa CartoDB Dark
+  // 2. Inicialización de la Aplicación y Mapa Original
   function initApp() {
     if (!map) initMap();
     refreshData();
     initSSE();
-    initTimeseriesChart();
   }
 
   function initMap() {
-    map = L.map('map', { zoomControl: true, attributionControl: false }).setView([18, 0], 2);
-
-    // CartoDB Dark Matter para máxima visibilidad táctica
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 18,
-      subdomains: 'abcd'
+    map = L.map('map', { zoomControl: false }).setView([15, 0], 2);
+    
+    // Mosaico Original: ArcGIS World Dark Gray Base
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri, HERE, Garmin, USGS', maxZoom: 16
     }).addTo(map);
 
     markersLayer = L.layerGroup().addTo(map);
 
-    // Cargar fallas tectónicas en neón cian
+    // Cargar fallas y placas tectónicas originales en naranja
     fetch('/tectonic_plates.json')
       .then(r => r.ok ? r.json() : fetch('/static/tectonic_plates.json').then(r => r.json()))
       .then(data => {
         platesLayer = L.geoJSON(data, {
-          style: { color: '#00f2fe', weight: 1.2, opacity: 0.55, dashArray: '4, 4' }
+          style: { color: '#ff7700', weight: 1.5, opacity: 0.65 }
         }).addTo(map);
       }).catch(() => {});
-
-    setTimeout(() => map.invalidateSize(), 300);
   }
 
   function togglePlates() {
@@ -668,75 +465,29 @@
     else map.addLayer(platesLayer);
   }
 
-  // 3. Carga y Filtros de Datos
+  // 3. Actualización de Datos y KPIs
   async function refreshData() {
-    const icon = document.getElementById("refresh-icon");
-    if (icon) icon.classList.add("animate-spin");
-
     try {
-      // 1. KPIs
+      // Cargar KPIs
       const kpiRes = await fetchAuth('/api/kpis');
       if (kpiRes.ok) {
         const k = await kpiRes.json();
         document.getElementById('kpi-total').innerText = k.total_sismos_24h;
         document.getElementById('kpi-max-mag').innerText = k.magnitud_maxima.toFixed(1);
+        document.getElementById('kpi-avg-mag').innerText = k.magnitud_promedio.toFixed(2);
         document.getElementById('kpi-tsunami').innerText = k.total_tsunamis;
-        document.getElementById('kpi-quality-score').innerText = `${k.puntaje_calidad.toFixed(1)}%`;
+        document.getElementById('kpi-quality-score').innerText = `Calidad: ${k.puntaje_calidad.toFixed(1)}%`;
       }
 
-      // 2. Eventos
-      const evRes = await fetchAuth('/api/events?limit=60');
+      // Cargar Eventos
+      const evRes = await fetchAuth('/api/events?limit=40');
       if (evRes.ok) {
         const d = await evRes.json();
-        allEvents = d.data || [];
-        applyCurrentFilter();
-        updateTopRegionsChips(allEvents);
+        renderEvents(d.data || []);
       }
-
-      // 3. Serie temporal
-      loadTimeseriesData();
-
     } catch (e) {
       console.error(e);
-    } finally {
-      if (icon) setTimeout(() => icon.classList.remove("animate-spin"), 500);
     }
-  }
-
-  function filterEvents(type) {
-    currentFilter = type;
-    ['all', 'm3', 'm5', 'tsunami'].forEach(t => {
-      const btn = document.getElementById(`filter-btn-${t}`);
-      if (btn) {
-        if (t === type) {
-          btn.className = "px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 whitespace-nowrap";
-        } else {
-          btn.className = "px-2.5 py-1 rounded-lg mc-card text-slate-300 hover:text-white whitespace-nowrap";
-        }
-      }
-    });
-    applyCurrentFilter();
-  }
-
-  function handleSearchEvent(query) {
-    const q = (query || "").toLowerCase().trim();
-    if (!q) {
-      applyCurrentFilter();
-      return;
-    }
-    const filtered = allEvents.filter(ev => 
-      (ev.place || "").toLowerCase().includes(q) || 
-      (ev.country_region || "").toLowerCase().includes(q)
-    );
-    renderEvents(filtered);
-  }
-
-  function applyCurrentFilter() {
-    let list = allEvents;
-    if (currentFilter === 'm3') list = allEvents.filter(e => e.mag >= 3.0);
-    else if (currentFilter === 'm5') list = allEvents.filter(e => e.mag >= 5.0);
-    else if (currentFilter === 'tsunami') list = allEvents.filter(e => e.tsunami > 0);
-    renderEvents(list);
   }
 
   function renderEvents(events) {
@@ -746,271 +497,68 @@
     markersLayer.clearLayers();
 
     if (!events.length) {
-      list.innerHTML = '<div class="text-center py-12 text-xs text-slate-500 font-mono">Sin sismos para los filtros seleccionados.</div>';
+      list.innerHTML = '<div class="text-center py-10 text-xs text-slate-400 font-mono">No hay eventos para mostrar.</div>';
       return;
     }
 
     events.forEach(ev => {
-      const magVal = ev.mag.toFixed(1);
-      const isCritical = ev.mag >= 5.0;
-      const isModerate = ev.mag >= 3.5 && ev.mag < 5.0;
-
-      const badgeColor = isCritical 
-        ? "bg-rose-500/20 text-rose-300 border-rose-500/40" 
-        : (isModerate ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40");
-
-      const markerColor = isCritical ? "#f43f5e" : (isModerate ? "#f59e0b" : "#10b981");
-
-      // Tarjeta en Feed
+      // Elemento en Lista
       const card = document.createElement('div');
-      card.className = "p-2.5 rounded-xl mc-card hover:bg-white/10 cursor-pointer transition flex items-center justify-between gap-2.5 group";
+      card.className = "p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 cursor-pointer transition";
+      const color = ev.mag >= 6.0 ? "text-rose-400" : (ev.mag >= 5.0 ? "text-amber-400" : "text-emerald-400");
       card.innerHTML = `
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="px-2 py-1 rounded-lg text-xs font-mono font-bold border ${badgeColor} shrink-0">
-            M ${magVal}
-          </div>
-          <div class="min-w-0">
-            <p class="text-xs text-slate-200 font-medium truncate group-hover:text-cyan-300 transition">${ev.place || ev.country_region}</p>
-            <p class="text-[10px] font-mono text-slate-500 flex items-center gap-1.5">
-              <span>Prof: ${ev.depth_km} km</span>
-              <span>•</span>
-              <span class="text-slate-400">${new Date(ev.time_utc).toLocaleTimeString()}</span>
-            </p>
-          </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-headline font-black ${color}">M ${ev.mag.toFixed(1)}</span>
+          <span class="text-[10px] font-mono text-slate-400">${new Date(ev.time_utc).toLocaleTimeString()}</span>
         </div>
-        <span class="material-symbols-outlined text-[16px] text-slate-500 group-hover:text-cyan-400 transition shrink-0">location_searching</span>
+        <p class="text-xs text-slate-200 mt-0.5 truncate">${ev.place || ev.country_region}</p>
       `;
-      card.onclick = () => {
-        map.flyTo([ev.latitude, ev.longitude], 6, { duration: 1.2 });
-      };
+      card.onclick = () => map.flyTo([ev.latitude, ev.longitude], 6);
       list.appendChild(card);
 
-      // Marcador con Halo Táctico
+      // Marcador en Mapa con Pulso Concéntrico
+      const circleColor = ev.mag >= 6.0 ? "#f43f5e" : (ev.mag >= 5.0 ? "#f59e0b" : "#10b981");
       const marker = L.circleMarker([ev.latitude, ev.longitude], {
-        radius: Math.max(ev.mag * 2.8, 4),
-        fillColor: markerColor,
+        radius: Math.max(ev.mag * 2.5, 4),
+        fillColor: circleColor,
         color: "#ffffff",
         weight: 1,
         fillOpacity: 0.85
       });
-
       marker.bindPopup(`
-        <div class="p-2 space-y-1 font-sans">
-          <div class="flex items-center justify-between gap-2 pb-1 border-b border-white/10">
-            <span class="text-xs font-mono font-bold text-cyan-300">M ${magVal}</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-white">${ev.alert_level || 'LEVE'}</span>
-          </div>
-          <h4 class="font-bold text-xs text-white">${ev.place}</h4>
-          <p class="text-[11px] text-slate-300 font-mono">Profundidad: <strong>${ev.depth_km} km</strong></p>
-          <p class="text-[10px] text-slate-400 font-mono">${new Date(ev.time_utc).toUTCString().slice(0, 22)}</p>
+        <div class="p-2 space-y-1">
+          <h4 class="font-bold text-sm text-white">M ${ev.mag.toFixed(1)} - ${ev.place}</h4>
+          <p class="text-xs text-slate-300">Profundidad: ${ev.depth_km} km</p>
+          <p class="text-xs text-slate-300">Fecha: ${new Date(ev.time_utc).toLocaleString()}</p>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10">${ev.alert_level}</span>
         </div>
       `);
       markersLayer.addLayer(marker);
     });
   }
 
-  function updateTopRegionsChips(events) {
-    const container = document.getElementById("top-regions-chips");
-    if (!container || !events.length) return;
-    const counts = {};
-    events.forEach(e => {
-      const reg = e.country_region || "Global";
-      counts[reg] = (counts[reg] || 0) + 1;
-    });
-    const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 4);
-    container.innerHTML = sorted.map(([reg, cnt]) => `
-      <span class="px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/20 text-[10px] font-mono text-cyan-300">
-        ${reg} (${cnt})
-      </span>
-    `).join('');
-  }
-
-  // 4. Server-Sent Events (SSE)
+  // 4. Server-Sent Events (SSE) en Tiempo Real
   function initSSE() {
     if (eventSource) eventSource.close();
     eventSource = new EventSource(`${API_BASE}/api/stream?token=${authToken}`);
     const badge = document.getElementById('live-badge');
 
     eventSource.onopen = () => {
-      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-      badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span class="w-2 h-2 rounded-full bg-emerald-500 -ml-3.5"></span>TELEMETRÍA EN VIVO (SSE)';
+      badge.className = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> EN VIVO (SSE)';
     };
 
     eventSource.onerror = () => {
-      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
-      badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span>RECONECTANDO...';
+      badge.className = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+      badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> RECONECTANDO...';
     };
 
-    eventSource.addEventListener('sismo', () => refreshData());
-  }
-
-  // 5. Gráfico de Serie Temporal Chart.js
-  function initTimeseriesChart() {
-    const ctx = document.getElementById('timeseries-chart');
-    if (!ctx) return;
-
-    timeseriesChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Sismos/Hora',
-          data: [],
-          borderColor: '#00f2fe',
-          backgroundColor: 'rgba(0, 242, 254, 0.1)',
-          fill: true,
-          tension: 0.35,
-          borderWidth: 2,
-          pointRadius: 2,
-          pointBackgroundColor: '#00f2fe'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { display: false },
-          y: {
-            display: true,
-            ticks: { color: '#64748b', font: { size: 9, family: 'Space Grotesk' }, stepSize: 1 },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-          }
-        }
-      }
+    eventSource.addEventListener('sismo', () => {
+      refreshData();
     });
   }
 
-  async function loadTimeseriesData() {
-    try {
-      const res = await fetchAuth('/api/stats/timeseries');
-      if (res.ok && timeseriesChartInstance) {
-        const rows = await res.json();
-        const labels = rows.map(r => r.hora_bloque ? r.hora_bloque.slice(11) : '');
-        const data = rows.map(r => r.total_eventos || 0);
-
-        timeseriesChartInstance.data.labels = labels;
-        timeseriesChartInstance.data.datasets[0].data = data;
-        timeseriesChartInstance.update();
-      }
-    } catch (e) {}
-  }
-
-  // 6. Copiloto IA (Gemini 1.5 Flash)
-  function toggleCopilot() {
-    const panel = document.getElementById('copilot-panel');
-    panel.classList.toggle('hidden');
-    if (map) setTimeout(() => map.invalidateSize(), 300);
-  }
-
-  function scrollChatToBottom() {
-    const box = document.getElementById('chat-messages');
-    if (box) box.scrollTop = box.scrollHeight;
-  }
-
-  function formatMarkdown(text) {
-    if (!text) return "";
-    let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    html = html.replace(/^### (.*$)/gim, '<h4 class="font-bold text-cyan-300 text-xs mt-2 mb-0.5">$1</h4>');
-    html = html.replace(/^## (.*$)/gim, '<h3 class="font-bold text-white text-xs mt-2 mb-0.5">$1</h3>');
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>');
-    html = html.replace(/`([^`]+)`/g, '<code class="bg-black/50 px-1 py-0.5 rounded text-amber-300 font-code text-[10px]">$1</code>');
-    html = html.replace(/^\s*-\s+(.*$)/gim, '<li class="ml-3 list-disc text-slate-200 my-0.5">$1</li>');
-    html = html.replace(/\n\n/g, '<div class="h-1.5"></div>');
-    html = html.replace(/\n/g, '<br/>');
-    return html;
-  }
-
-  function appendUserMessage(text) {
-    const container = document.getElementById('chat-messages');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = "flex items-start justify-end gap-2";
-    msgDiv.innerHTML = `
-      <div class="p-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-teal-700 text-white font-medium text-xs shadow-md max-w-[85%] leading-relaxed font-sans">
-        ${text}
-      </div>
-      <div class="w-6 h-6 rounded-lg bg-slate-800 border border-white/20 flex items-center justify-center text-white shrink-0 text-xs">
-        <span class="material-symbols-outlined text-[14px]">person</span>
-      </div>
-    `;
-    container.appendChild(msgDiv);
-    scrollChatToBottom();
-  }
-
-  function appendAIMessage(text, modelName, keyUsed) {
-    const container = document.getElementById('chat-messages');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = "flex items-start gap-2";
-    const pill = keyUsed > 0 
-      ? `<span class="px-1.5 py-0.2 rounded text-[8px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Gemini Key #${keyUsed}</span>`
-      : `<span class="px-1.5 py-0.2 rounded text-[8px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">Agente Local</span>`;
-
-    msgDiv.innerHTML = `
-      <div class="w-6 h-6 rounded-lg bg-cyan-600 flex items-center justify-center text-slate-950 shrink-0 shadow font-bold">
-        <span class="material-symbols-outlined text-[14px]">smart_toy</span>
-      </div>
-      <div class="p-2.5 rounded-2xl bg-white/5 border border-white/10 text-slate-200 space-y-1 leading-relaxed max-w-[88%]">
-        <div class="flex items-center gap-1.5 pb-1 border-b border-white/5">
-          <span class="font-bold text-white text-[10px]">SismoWatch IA</span>
-          ${pill}
-        </div>
-        <div class="text-xs leading-relaxed text-slate-200">${formatMarkdown(text)}</div>
-      </div>
-    `;
-    container.appendChild(msgDiv);
-    scrollChatToBottom();
-  }
-
-  async function sendQuickPrompt(promptText) {
-    const input = document.getElementById('chat-input');
-    if (input) input.value = promptText;
-    await executeChatMessage(promptText);
-  }
-
-  async function handleChatSubmit(event) {
-    event.preventDefault();
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if (!text) return;
-    await executeChatMessage(text);
-  }
-
-  async function executeChatMessage(message) {
-    const input = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('chat-send-btn');
-    const indicator = document.getElementById('chat-typing-indicator');
-
-    appendUserMessage(message);
-    if (input) input.value = "";
-    if (sendBtn) sendBtn.disabled = true;
-    if (indicator) indicator.classList.remove('hidden');
-    scrollChatToBottom();
-
-    try {
-      const res = await fetchAuth('/api/chat', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: message })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        appendAIMessage(data.answer, data.model, data.key_used);
-      } else {
-        const err = await res.json();
-        appendAIMessage(`⚠️ ${err.detail || 'Error al conectar con el asistente.'}`, 'error', 0);
-      }
-    } catch (e) {
-      appendAIMessage(`❌ Error de conexión: ${e.message}`, 'error', 0);
-    } finally {
-      if (sendBtn) sendBtn.disabled = false;
-      if (indicator) indicator.classList.add('hidden');
-      scrollChatToBottom();
-    }
-  }
-
-  // 7. Modales Especiales
+  // 5. Modales y Vistas Especiales
   async function toggleModalReportes() {
     const modal = document.getElementById('modal-reportes');
     modal.classList.toggle('hidden');
@@ -1020,11 +568,11 @@
       if (res.ok) {
         const reports = await res.json();
         if (!reports.length) {
-          body.innerHTML = '<div class="text-center py-10 text-xs text-slate-400 font-mono">No hay reportes de IA registrados aún. Dispara el DAG dag_03 en Airflow.</div>';
+          body.innerHTML = '<div class="text-center py-10 text-xs text-slate-400 font-mono">No hay reportes de IA registrados aún. Dispara dag_03_daily_ai_report en Airflow.</div>';
           return;
         }
         body.innerHTML = reports.map(r => `
-          <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
+          <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-mono text-amber-400 font-bold">Fecha: ${r.report_date}</span>
               <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Modelo: ${r.model_name} (Key #${r.api_key_index})</span>
@@ -1060,7 +608,127 @@
     }
   }
 
-  // 8. Acciones de Administrador
+  // =========================================================================
+  // 6. ASISTENTE DE CHAT IA CONVERSACIONAL (GEMINI 1.5 FLASH • PREGUNTA LIBRE)
+  // =========================================================================
+  function toggleModalChat() {
+    const modal = document.getElementById('modal-chat-ia');
+    modal.classList.toggle('hidden');
+    if (!modal.classList.contains('hidden')) {
+      setTimeout(() => {
+        const input = document.getElementById('chat-input');
+        if (input) input.focus();
+        scrollChatToBottom();
+      }, 100);
+    }
+  }
+
+  function scrollChatToBottom() {
+    const box = document.getElementById('chat-messages');
+    if (box) box.scrollTop = box.scrollHeight;
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return "";
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    html = html.replace(/^### (.*$)/gim, '<h4 class="font-bold text-emerald-400 text-sm mt-2 mb-1">$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="font-bold text-white text-sm mt-2 mb-1">$1</h3>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>');
+    html = html.replace(/`([^`]+)`/g, '<code class="bg-black/40 px-1 py-0.5 rounded text-amber-300 font-mono text-[11px]">$1</code>');
+    html = html.replace(/^\s*-\s+(.*$)/gim, '<li class="ml-4 list-disc text-slate-200 my-0.5">$1</li>');
+    html = html.replace(/\n\n/g, '<div class="h-2"></div>');
+    html = html.replace(/\n/g, '<br/>');
+    return html;
+  }
+
+  function appendUserMessage(text) {
+    const container = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = "flex items-start justify-end gap-2.5";
+    msgDiv.innerHTML = `
+      <div class="p-3 rounded-2xl bg-emerald-600/90 text-white font-medium shadow-md max-w-[85%] leading-relaxed font-sans">
+        ${text}
+      </div>
+      <div class="w-7 h-7 rounded-lg bg-slate-800 border border-white/20 flex items-center justify-center text-white shrink-0">
+        <span class="material-symbols-outlined text-[16px]">person</span>
+      </div>
+    `;
+    container.appendChild(msgDiv);
+    scrollChatToBottom();
+  }
+
+  function appendAIMessage(text, modelName, keyUsed) {
+    const container = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = "flex items-start gap-2.5";
+    const pill = keyUsed > 0 
+      ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Gemini Key #${keyUsed}</span>`
+      : `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">Agente Geofísico Local</span>`;
+
+    msgDiv.innerHTML = `
+      <div class="w-7 h-7 rounded-lg bg-emerald-700 flex items-center justify-center text-white shrink-0 shadow">
+        <span class="material-symbols-outlined text-[16px]">smart_toy</span>
+      </div>
+      <div class="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 space-y-1.5 leading-relaxed max-w-[85%]">
+        <div class="flex items-center gap-1.5 pb-1 border-b border-white/5">
+          <span class="font-bold text-white text-[11px]">SismoWatch IA</span>
+          ${pill}
+        </div>
+        <div class="text-xs leading-relaxed text-slate-200">${formatMarkdown(text)}</div>
+      </div>
+    `;
+    container.appendChild(msgDiv);
+    scrollChatToBottom();
+  }
+
+  async function handleChatSubmit(event) {
+    event.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    await executeChatMessage(text);
+  }
+
+  async function executeChatMessage(message) {
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send-btn');
+    const indicator = document.getElementById('chat-typing-indicator');
+
+    appendUserMessage(message);
+    if (input) input.value = "";
+    if (sendBtn) sendBtn.disabled = true;
+    if (indicator) indicator.classList.remove('hidden');
+    scrollChatToBottom();
+
+    try {
+      const res = await fetchAuth('/api/chat', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        appendAIMessage(data.answer, data.model, data.key_used);
+      } else {
+        const err = await res.json();
+        appendAIMessage(`⚠️ Aviso: ${err.detail || 'No se pudo conectar con el asistente.'}`, 'error', 0);
+      }
+    } catch (e) {
+      appendAIMessage(`❌ Error de comunicación con la API: ${e.message}`, 'error', 0);
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      if (indicator) indicator.classList.add('hidden');
+      scrollChatToBottom();
+    }
+  }
+
+  // 7. Acciones de Administrador
   async function adminTriggerBackfill() {
     if (!confirm("¿Deseas disparar la ejecución del Backfill Histórico de 30 días en Airflow?")) return;
     const res = await fetchAuth('/api/admin/backfill', {
@@ -1069,11 +737,11 @@
       body: JSON.stringify({ days_back: 30, min_magnitude: 2.5 })
     });
     const d = await res.json();
-    alert(d.message || "Solicitud enviada.");
+    alert(d.message || "Solicitud de backfill enviada.");
   }
 
   async function adminTriggerRegenerateReport() {
-    if (!confirm("¿Deseas forzar la regeneración del reporte diario con Gemini?")) return;
+    if (!confirm("¿Deseas forzar la regeneración del reporte diario de IA?")) return;
     const res = await fetchAuth('/api/admin/reports/regenerate', { method: "POST" });
     const d = await res.json();
     alert(d.message || "Solicitud de reporte enviada.");
@@ -1083,7 +751,7 @@
     window.open(`${API_BASE}/api/reports/export?format=csv&token=${authToken}`, '_blank');
   }
 
-  // Reloj Atómico UTC
+  // Reloj UTC Dinámico
   setInterval(() => {
     const el = document.getElementById('utc-clock');
     if (el) el.innerText = new Date().toUTCString().slice(17, 25) + " UTC";
