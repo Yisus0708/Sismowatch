@@ -192,6 +192,7 @@ def registrar_servicio_postgres(token, owners_dict):
     tablas = [
         {
             "name": "earthquake_events",
+            "displayName": "🥈 curated.earthquake_events (Sismos Validados)",
             "description": "Catálogo unificado de eventos sísmicos limpios y clasificados.",
             "columns": [
                 {"name": "id", "dataType": "VARCHAR", "dataLength": 50, "description": "Identificador único USGS"},
@@ -210,6 +211,7 @@ def registrar_servicio_postgres(token, owners_dict):
         },
         {
             "name": "resumen_diario_pais",
+            "displayName": "🥇 curated.resumen_diario_pais (Resumen País)",
             "description": "Modelo analítico diario consolidado por país y fecha.",
             "columns": [
                 {"name": "fecha_evento", "dataType": "DATE", "description": "Fecha del resumen"},
@@ -225,6 +227,7 @@ def registrar_servicio_postgres(token, owners_dict):
         },
         {
             "name": "zonas_criticas_frecuentes",
+            "displayName": "🥇 curated.zonas_criticas_frecuentes (Hotspots 1x1)",
             "description": "Hotspots tectónicos por cuadrículas de 1°x1°.",
             "columns": [
                 {"name": "cuadricula_lat", "dataType": "NUMERIC", "description": "Latitud inferior de la cuadrícula"},
@@ -238,6 +241,7 @@ def registrar_servicio_postgres(token, owners_dict):
         },
         {
             "name": "ai_daily_reports",
+            "displayName": "🤖 curated.ai_daily_reports (Reportes IA Gemini)",
             "description": "Informes ejecutivos diarios redactados por IA con métricas verificadas.",
             "columns": [
                 {"name": "id", "dataType": "INT", "description": "Identificador incremental del reporte"},
@@ -252,6 +256,7 @@ def registrar_servicio_postgres(token, owners_dict):
     for t in tablas:
         tabla_payload = {
             "name": t["name"],
+            "displayName": t.get("displayName", t["name"]),
             "databaseSchema": "postgresql_sismowatch.sismos_db.curated",
             "description": t["description"],
             "columns": t["columns"]
@@ -259,7 +264,7 @@ def registrar_servicio_postgres(token, owners_dict):
         if "jesus" in owners_dict:
             tabla_payload["owners"] = [owners_dict["jesus"]]
         api_request("PUT", "tables", tabla_payload, token)
-        print(f"  ✓ Tabla catalogada: curated.{t['name']}")
+        print(f"  ✓ Tabla catalogada: curated.{t['name']} ({t.get('displayName')})")
 
 
 def registrar_servicio_minio(token, owners_dict):
@@ -282,21 +287,22 @@ def registrar_servicio_minio(token, owners_dict):
     api_request("PUT", "services/storageServices", service_payload, token)
 
     buckets = [
-        ("bronze", "Capa Bronze: Archivos GeoJSON crudos e inmutables."),
-        ("silver", "Capa Silver: Archivos Parquet Snappy limpios y particionados."),
-        ("gold", "Capa Gold: Modelos analíticos Parquet de resumen y cuadrículas.")
+        ("bronze", "🥉 Capa Bronze (Data Lake S3)", "Capa Bronze: Archivos GeoJSON crudos e inmutables ingestados desde USGS."),
+        ("silver", "🥈 Capa Silver (Parquet S3)", "Capa Silver: Archivos Parquet Snappy limpios, tipados y deduplicados."),
+        ("gold", "🥇 Capa Gold (Analytics S3)", "Capa Gold: Modelos analíticos Parquet particionados por país y cuadrículas.")
     ]
 
-    for b_name, b_desc in buckets:
+    for b_name, b_disp, b_desc in buckets:
         cont_payload = {
             "name": b_name,
+            "displayName": b_disp,
             "service": "minio_s3_datalake",
             "description": b_desc
         }
         if "sayder" in owners_dict:
             cont_payload["owners"] = [owners_dict["sayder"]]
         api_request("PUT", "containers", cont_payload, token)
-        print(f"  ✓ Bucket catalogado: {b_name}")
+        print(f"  ✓ Bucket catalogado: {b_name} ({b_disp})")
 
 
 def registrar_servicio_spark_y_airflow(token, owners_dict):
@@ -336,15 +342,23 @@ def registrar_servicio_spark_y_airflow(token, owners_dict):
 def registrar_linaje_completo(token):
     print("\n--- 6. Configurando Linaje de Datos de Extremo a Extremo ---")
     lineage_edges = [
-        # Bronze -> Spark Batch -> Silver
+        # 1. Bronze S3 -> Silver S3
         {
             "from_entity": "container",
             "from_fqn": "minio_s3_datalake.bronze",
             "to_entity": "container",
             "to_fqn": "minio_s3_datalake.silver",
-            "description": "Refinamiento masivo en PySpark Batch"
+            "description": "Refinamiento y deduplicación en PySpark Batch"
         },
-        # Silver -> Spark Batch -> Gold
+        # 2. Silver S3 -> curated.earthquake_events
+        {
+            "from_entity": "container",
+            "from_fqn": "minio_s3_datalake.silver",
+            "to_entity": "table",
+            "to_fqn": "postgresql_sismowatch.sismos_db.curated.earthquake_events",
+            "description": "Upsert idempotente en Serving Layer Postgres"
+        },
+        # 3. Silver S3 -> Gold S3
         {
             "from_entity": "container",
             "from_fqn": "minio_s3_datalake.silver",
@@ -352,29 +366,45 @@ def registrar_linaje_completo(token):
             "to_fqn": "minio_s3_datalake.gold",
             "description": "Modelado analítico Gold Parquet"
         },
-        # Gold MinIO -> PostgreSQL Curated
+        # 4. curated.earthquake_events -> Gold S3
+        {
+            "from_entity": "table",
+            "from_fqn": "postgresql_sismowatch.sismos_db.curated.earthquake_events",
+            "to_entity": "container",
+            "to_fqn": "minio_s3_datalake.gold",
+            "description": "Cálculo de modelos analíticos Gold"
+        },
+        # 5. Gold MinIO -> PostgreSQL Curated Resumen Pais
         {
             "from_entity": "container",
             "from_fqn": "minio_s3_datalake.gold",
             "to_entity": "table",
             "to_fqn": "postgresql_sismowatch.sismos_db.curated.resumen_diario_pais",
-            "description": "Carga Serving Layer"
+            "description": "Serving Layer: Resumen agregado diario por país"
         },
-        # Silver -> PostgreSQL Curated Events
+        # 6. Gold MinIO -> PostgreSQL Curated Zonas Frecuentes
         {
             "from_entity": "container",
-            "from_fqn": "minio_s3_datalake.silver",
+            "from_fqn": "minio_s3_datalake.gold",
             "to_entity": "table",
-            "to_fqn": "postgresql_sismowatch.sismos_db.curated.earthquake_events",
-            "description": "Upsert idempotente de eventos sísmicos validados"
+            "to_fqn": "postgresql_sismowatch.sismos_db.curated.zonas_criticas_frecuentes",
+            "description": "Serving Layer: Hotspots por cuadrículas 1°x1°"
         },
-        # Events -> AI Reports
+        # 7. Resumen Pais -> AI Reports
+        {
+            "from_entity": "table",
+            "from_fqn": "postgresql_sismowatch.sismos_db.curated.resumen_diario_pais",
+            "to_entity": "table",
+            "to_fqn": "postgresql_sismowatch.sismos_db.curated.ai_daily_reports",
+            "description": "Insumo analítico para reporte ejecutivo con Gemini"
+        },
+        # 8. Events -> AI Reports
         {
             "from_entity": "table",
             "from_fqn": "postgresql_sismowatch.sismos_db.curated.earthquake_events",
             "to_entity": "table",
             "to_fqn": "postgresql_sismowatch.sismos_db.curated.ai_daily_reports",
-            "description": "Generación diaria con Pool de Gemini y Z-Score"
+            "description": "Detección de anomalías Z-Score y sismos críticos para IA"
         }
     ]
 
