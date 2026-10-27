@@ -55,10 +55,11 @@ POSTGRES_DB = os.getenv("POSTGRES_DB", "sismos_db")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "sismo_transform_user")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "transform_secret_2026")
 
-STAGING_BRONZE_DIR = "/tmp/bronze_batch"
-STAGING_SILVER_DIR = "/tmp/silver_batch"
-STAGING_GOLD1_DIR = "/tmp/gold1_batch"
-STAGING_GOLD2_DIR = "/tmp/gold2_batch"
+BASE_STAGING = "/opt/spark/apps/staging"
+STAGING_BRONZE_DIR = os.path.join(BASE_STAGING, "bronze")
+STAGING_SILVER_DIR = os.path.join(BASE_STAGING, "silver")
+STAGING_GOLD1_DIR = os.path.join(BASE_STAGING, "gold1")
+STAGING_GOLD2_DIR = os.path.join(BASE_STAGING, "gold2")
 LOCAL_FALLBACK_PATH = "/opt/spark/apps/sample_batch_dia.json"
 
 

@@ -27,7 +27,7 @@ END $$;
 
 GRANT CONNECT ON DATABASE sismos_db TO sismo_transform_user;
 GRANT USAGE ON SCHEMA raw, staging, curated, quality TO sismo_transform_user;
-GRANT SELECT ON ALL TABLES IN SCHEMA raw TO sismo_transform_user;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA raw TO sismo_transform_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA staging TO sismo_transform_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA curated TO sismo_transform_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA quality TO sismo_transform_user;

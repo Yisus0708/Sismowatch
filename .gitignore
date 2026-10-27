@@ -38,5 +38,6 @@ Thumbs.db
 
 # Checkpoints y temporales de Spark
 .spark-staging/
+spark/apps/staging/
 metastore_db/
 derby.log
