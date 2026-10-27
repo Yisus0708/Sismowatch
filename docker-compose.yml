@@ -24,8 +24,10 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_LICENSE: /mnt/license/minio.license
     volumes:
       - minio_data:/mnt/data
+      - ./minio.license:/mnt/license/minio.license:ro
     command: server /mnt/data --console-address ":9001"
     networks:
       - sismowatch_net
@@ -36,19 +38,20 @@ services:
     container_name: sismowatch_minio_buckets
     depends_on:
       - minio
-    entrypoint: >
-      /bin/sh -c "
-      echo 'Esperando inicialización de MinIO S3...'
-      while ! mc alias set local http://minio:9000 minioadmin minioadmin 2>/dev/null; do
-        sleep 2
-      done
-      echo 'MinIO listo. Configurando buckets Medallón...'
-      mc mb --ignore-existing local/bronze
-      mc mb --ignore-existing local/silver
-      mc mb --ignore-existing local/gold
-      mc admin user svcacct add local minioadmin --access-key 'Uvp62vvXRo9GiUjZPiC6' --secret-key 'SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn' || true
-      echo '✓ Buckets bronze, silver, gold y service account creados con éxito.'
-      "
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo 'Esperando inicialización de MinIO S3...'
+        while ! mc alias set local http://minio:9000 minioadmin minioadmin 2>/dev/null; do
+          sleep 2
+        done
+        echo 'MinIO listo. Configurando buckets Medallón...'
+        mc mb --ignore-existing local/bronze
+        mc mb --ignore-existing local/silver
+        mc mb --ignore-existing local/gold
+        mc admin user svcacct add local minioadmin --access-key 'Uvp62vvXRo9GiUjZPiC6' --secret-key 'SVnjG3CxoqgmAZ7r3nbVAYDK2V6wvxLUGMq35YRn' || true
+        echo '✓ Buckets bronze, silver, gold y service account creados con éxito.'
     networks:
       - sismowatch_net
 
@@ -107,6 +110,7 @@ services:
       - POSTGRES_DB=sismos_db
       - POSTGRES_USER=sismo_transform_user
       - POSTGRES_PASSWORD=transform_secret_2026
+      - SPARK_MASTER_URL=spark://spark-master:7077
     networks:
       - sismowatch_net
     restart: unless-stopped
@@ -170,7 +174,7 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_USER:-admin}
       _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_PASSWORD:-admin}
     command:
-      - /bin/bash
+      - bash
       - -c
       - |
         airflow db migrate
@@ -184,7 +188,9 @@ services:
     container_name: sismowatch_airflow_webserver
     user: "0:0"
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
+    command: webserver
     ports:
       - "8080:8080"
     volumes:
@@ -218,7 +224,9 @@ services:
     container_name: sismowatch_airflow_scheduler
     user: "0:0"
     depends_on:
-      - airflow-init
+      airflow-init:
+        condition: service_completed_successfully
+    command: scheduler
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/include:/opt/airflow/include

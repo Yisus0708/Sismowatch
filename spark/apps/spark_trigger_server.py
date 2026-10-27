@@ -45,8 +45,9 @@ class SparkTriggerHandler(http.server.BaseHTTPRequestHandler):
             logging.info(">>> Solicitud de disparo recibida desde Airflow <<<")
             logging.info("==================================================")
             try:
-                cmd = [SPARK_SUBMIT_BIN, SPARK_SCRIPT_PATH]
-                logging.info(f"Iniciando comando: {' '.join(cmd)}")
+                spark_master = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
+                cmd = [SPARK_SUBMIT_BIN, "--master", spark_master, SPARK_SCRIPT_PATH]
+                logging.info(f"Iniciando comando en master {spark_master}: {' '.join(cmd)}")
                 
                 proc = subprocess.run(
                     cmd,
