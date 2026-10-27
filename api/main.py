@@ -21,6 +21,11 @@ from auth import (
     require_admin, sanitize_prompt_text
 )
 from models import LoginRequest, TokenResponse, KPIResponse, BackfillTriggerRequest
+from ai_chat import procesar_mensaje_chat
+from pydantic import BaseModel
+
+class ChatMessageRequest(BaseModel):
+    message: str
 
 app = FastAPI(
     title="SismoWatch API",
@@ -353,6 +358,30 @@ def trigger_backfill(
             return {"status": "PENDING_LOCAL", "message": f"Solicitud registrada localmente (Airflow API HTTP {resp.status_code})."}
     except Exception as e:
         return {"status": "REGISTERED", "message": f"Backfill encolado: {str(e)}"}
+
+
+# -----------------------------------------------------------------------------
+# 9. ASISTENTE DE CHAT IA CONVERSACIONAL (GEMINI 1.5 FLASH & SILVER/GOLD)
+# -----------------------------------------------------------------------------
+@app.post("/api/chat", tags=["IA Chat"])
+def chat_with_ai(
+    request: ChatMessageRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Chat conversacional con IA para consultar en lenguaje natural sobre:
+    - Datos en la Capa Bronze (Raw GeoJSON).
+    - Datos y sismos que pasaron a la Capa Silver (curated.earthquake_events).
+    - Modelos analíticos en la Capa Gold (resumen diario por país, hotspots y reportes IA).
+    - Distribución de sismos por país, magnitudes y alertas de tsunami.
+    """
+    clean_msg = sanitize_prompt_text(request.message)
+    if not clean_msg.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El mensaje no puede estar vacío."
+        )
+    return procesar_mensaje_chat(clean_msg)
 
 
 @app.post("/api/admin/reports/regenerate", tags=["Administración"])

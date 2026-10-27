@@ -51,8 +51,9 @@ BEGIN
 END $$;
 
 GRANT CONNECT ON DATABASE sismos_db TO sismo_read_user;
-GRANT USAGE ON SCHEMA curated, quality TO sismo_read_user;
+GRANT USAGE ON SCHEMA curated, quality, raw TO sismo_read_user;
 GRANT SELECT ON ALL TABLES IN SCHEMA curated TO sismo_read_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA raw TO sismo_read_user;
 GRANT SELECT ON quality.quality_metrics TO sismo_read_user;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA curated GRANT SELECT ON TABLES TO sismo_read_user;

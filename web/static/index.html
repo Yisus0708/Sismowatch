@@ -119,6 +119,10 @@
 
     <!-- Barra de Navegación y Vistas -->
     <div class="pointer-events-auto hidden md:flex items-center hud-glass rounded-2xl p-1 gap-1">
+      <button onclick="toggleModalChat()" class="px-3 py-1.5 rounded-xl text-emerald-300 hover:text-white hover:bg-emerald-500/15 border border-emerald-500/30 font-mono-geo text-xs font-medium transition flex items-center gap-1.5 shadow-lg shadow-emerald-950/40">
+        <span class="material-symbols-outlined text-[16px] text-emerald-400">forum</span> Chat IA
+      </button>
+
       <button onclick="toggleModalReportes()" class="px-3 py-1.5 rounded-xl text-amber-300 hover:text-white hover:bg-amber-500/15 border border-amber-500/30 font-mono-geo text-xs font-medium transition flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[16px] text-amber-400">psychology</span> Reportes IA
       </button>
@@ -215,7 +219,92 @@
 </div>
 
 <!-- ================================================================= -->
-<!-- MODALES INTERACTIVOS (REPORTES IA, CUARENTENA, PIPELINE) -->
+<!-- BOTÓN FLOTANTE Y MODAL DE CHAT IA SISMOWATCH -->
+<!-- ================================================================= -->
+
+<!-- BOTÓN FLOTANTE EN ESQUINA INFERIOR DERECHA -->
+<div class="fixed bottom-6 right-6 z-40 pointer-events-auto">
+  <button onclick="toggleModalChat()" class="hud-glass px-4 py-3 rounded-full flex items-center gap-2.5 text-white hover:scale-105 transition-all duration-300 shadow-2xl border-emerald-500/40 hover:border-emerald-400 group">
+    <span class="relative flex h-3 w-3">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+    </span>
+    <span class="material-symbols-outlined text-emerald-400 group-hover:rotate-12 transition">forum</span>
+    <span class="font-headline font-bold text-xs tracking-wide">Chat IA SismoWatch</span>
+  </button>
+</div>
+
+<!-- VENTANA HUD CHAT IA -->
+<div id="modal-chat-ia" class="hidden fixed inset-0 z-50 flex items-center justify-center sm:justify-end sm:items-end sm:p-6 bg-black/60 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none p-3 pointer-events-none">
+  <div class="pointer-events-auto hud-glass max-w-lg w-full h-[620px] max-h-[92vh] rounded-3xl p-5 border border-emerald-500/40 flex flex-col shadow-2xl relative">
+    
+    <!-- Encabezado del Chat -->
+    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-800 flex items-center justify-center text-white shadow-md">
+          <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+        </div>
+        <div>
+          <h3 class="font-headline font-bold text-sm text-white flex items-center gap-2">
+            Asistente Geofísico IA
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-mono-geo font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Gemini 1.5 Flash
+            </span>
+          </h3>
+          <p class="text-[11px] text-slate-400 font-mono-geo">Acceso a Capas Silver, Gold y Sismos Globales</p>
+        </div>
+      </div>
+      <button onclick="toggleModalChat()" class="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Sugerencias Rápidas -->
+    <div class="py-2.5 flex items-center gap-1.5 overflow-x-auto custom-scroll text-[11px] font-mono-geo border-b border-white/5">
+      <button onclick="sendQuickPrompt('¿Qué datos pasaron a silver o a gold?')" class="px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/30 whitespace-nowrap transition">
+        ⚡ ¿Qué datos pasaron a Silver/Gold?
+      </button>
+      <button onclick="sendQuickPrompt('¿En qué país ocurrió el sismo más fuerte y cuáles son las regiones más activas?')" class="px-2.5 py-1 rounded-lg bg-sky-950/60 hover:bg-sky-900 text-sky-300 border border-sky-500/30 whitespace-nowrap transition">
+        🌍 ¿En qué países hubo sismos?
+      </button>
+      <button onclick="sendQuickPrompt('¿Hubo sismos críticos mayores a M5.0 o alertas de tsunami activas?')" class="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 whitespace-nowrap transition">
+        🚨 ¿Alertas críticas o tsunami?
+      </button>
+    </div>
+
+    <!-- Historial de Conversación -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto custom-scroll py-3 space-y-3 pr-1 text-xs">
+      <!-- Mensaje Inicial de Bienvenida -->
+      <div class="flex items-start gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-emerald-600/80 flex items-center justify-center text-white shrink-0">
+          <span class="material-symbols-outlined text-[16px]">psychology</span>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 space-y-1.5 leading-relaxed max-w-[85%]">
+          <p class="font-bold text-emerald-400">¡Hola! Soy el Asistente IA de SismoWatch.</p>
+          <p>Tengo acceso en tiempo real a los <b>193 sismos validados en la Capa Silver</b> y a los <b>resúmenes diarios y cuadrículas de la Capa Gold</b>.</p>
+          <p class="text-[11px] text-slate-400">Pregúntame qué datos pasaron a Silver o Gold, en qué país ocurrieron sismos o métricas de calidad.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicador de Escribiendo (Carga) -->
+    <div id="chat-typing-indicator" class="hidden py-1 px-3 text-[11px] font-mono-geo text-emerald-400 flex items-center gap-2">
+      <span class="animate-spin material-symbols-outlined text-[14px]">progress_activity</span>
+      <span>Consultando capas Silver/Gold y analizando con Gemini...</span>
+    </div>
+
+    <!-- Barra de Entrada y Envío -->
+    <form onsubmit="handleChatSubmit(event)" class="pt-2 border-t border-white/10 flex items-center gap-2">
+      <input id="chat-input" type="text" autocomplete="off" placeholder="Pregunta sobre Silver, Gold, países o sismos..." class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono-geo">
+      <button type="submit" id="chat-send-btn" class="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono-geo font-bold text-xs transition flex items-center gap-1 shadow-md shadow-emerald-950/50">
+        <span class="material-symbols-outlined text-[16px]">send</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- MODALES INTERACTIVOS (REPORTES IA, PIPELINE) -->
 <!-- ================================================================= -->
 
 <!-- MODAL REPORTES IA -->
@@ -526,6 +615,142 @@
           `).join('')}
         `;
       }
+    }
+  }
+
+  // =========================================================================
+  // 6. ASISTENTE DE CHAT IA CONVERSACIONAL (GEMINI 1.5 FLASH)
+  // =========================================================================
+  function toggleModalChat() {
+    const modal = document.getElementById('modal-chat-ia');
+    modal.classList.toggle('hidden');
+    if (!modal.classList.contains('hidden')) {
+      setTimeout(() => {
+        const input = document.getElementById('chat-input');
+        if (input) input.focus();
+        scrollChatToBottom();
+      }, 100);
+    }
+  }
+
+  function scrollChatToBottom() {
+    const box = document.getElementById('chat-messages');
+    if (box) box.scrollTop = box.scrollHeight;
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return "";
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Títulos ###
+    html = html.replace(/^### (.*$)/gim, '<h4 class="font-bold text-emerald-400 text-sm mt-2 mb-1">$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="font-bold text-white text-sm mt-2 mb-1">$1</h3>');
+
+    // Negritas **texto**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
+    // Cursivas *texto*
+    html = html.replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>');
+    // Código `codigo`
+    html = html.replace(/`([^`]+)`/g, '<code class="bg-black/40 px-1 py-0.5 rounded text-amber-300 font-mono-geo text-[11px]">$1</code>');
+
+    // Listas con guiones - item
+    html = html.replace(/^\s*-\s+(.*$)/gim, '<li class="ml-4 list-disc text-slate-200 my-0.5">$1</li>');
+
+    // Saltos de línea
+    html = html.replace(/\n\n/g, '<div class="h-2"></div>');
+    html = html.replace(/\n/g, '<br/>');
+
+    return html;
+  }
+
+  function appendUserMessage(text) {
+    const container = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = "flex items-start justify-end gap-2.5";
+    msgDiv.innerHTML = `
+      <div class="p-3 rounded-2xl bg-emerald-600/90 text-white font-medium shadow-md max-w-[85%] leading-relaxed font-body">
+        ${text}
+      </div>
+      <div class="w-7 h-7 rounded-lg bg-slate-800 border border-white/20 flex items-center justify-center text-white shrink-0">
+        <span class="material-symbols-outlined text-[16px]">person</span>
+      </div>
+    `;
+    container.appendChild(msgDiv);
+    scrollChatToBottom();
+  }
+
+  function appendAIMessage(text, modelName, keyUsed) {
+    const container = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = "flex items-start gap-2.5";
+    const pill = keyUsed > 0 
+      ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono-geo bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Gemini Key #${keyUsed}</span>`
+      : `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono-geo bg-purple-500/20 text-purple-300 border border-purple-500/30">Agente Geofísico Local</span>`;
+
+    msgDiv.innerHTML = `
+      <div class="w-7 h-7 rounded-lg bg-emerald-700 flex items-center justify-center text-white shrink-0 shadow">
+        <span class="material-symbols-outlined text-[16px]">smart_toy</span>
+      </div>
+      <div class="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 space-y-1.5 leading-relaxed max-w-[85%]">
+        <div class="flex items-center gap-1.5 pb-1 border-b border-white/5">
+          <span class="font-bold text-white text-[11px]">SismoWatch IA</span>
+          ${pill}
+        </div>
+        <div class="text-xs leading-relaxed text-slate-200">${formatMarkdown(text)}</div>
+      </div>
+    `;
+    container.appendChild(msgDiv);
+    scrollChatToBottom();
+  }
+
+  async function sendQuickPrompt(promptText) {
+    const input = document.getElementById('chat-input');
+    if (input) input.value = promptText;
+    await executeChatMessage(promptText);
+  }
+
+  async function handleChatSubmit(event) {
+    event.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    await executeChatMessage(text);
+  }
+
+  async function executeChatMessage(message) {
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send-btn');
+    const indicator = document.getElementById('chat-typing-indicator');
+
+    appendUserMessage(message);
+    if (input) input.value = "";
+    if (sendBtn) sendBtn.disabled = true;
+    if (indicator) indicator.classList.remove('hidden');
+    scrollChatToBottom();
+
+    try {
+      const res = await fetchAuth('/api/chat', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        appendAIMessage(data.answer, data.model, data.key_used);
+      } else {
+        const err = await res.json();
+        appendAIMessage(`⚠️ Aviso: ${err.detail || 'No se pudo conectar con el asistente.'}`, 'error', 0);
+      }
+    } catch (e) {
+      appendAIMessage(`❌ Error de comunicación con la API: ${e.message}`, 'error', 0);
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      if (indicator) indicator.classList.add('hidden');
+      scrollChatToBottom();
     }
   }
 

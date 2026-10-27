@@ -278,6 +278,8 @@ services:
       - AIRFLOW_PASSWORD=admin
     networks:
       - sismowatch_net
+    volumes:
+      - ./api:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -293,6 +295,8 @@ services:
     container_name: sismowatch_web
     ports:
       - "3000:80"
+    volumes:
+      - ./web/static:/usr/share/nginx/html:ro
     networks:
       - sismowatch_net
     depends_on:
